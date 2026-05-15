@@ -12,6 +12,7 @@ import DeficiencyAlert from '../components/dashboard/DeficiencyAlert';
 import AISuggestionCard from '../components/dashboard/AISuggestionCard';
 import ChatBot from '../components/common/ChatBot';
 
+
 const DashboardPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -104,6 +105,7 @@ const DashboardPage = () => {
                     <div className="md:col-span-2 lg:col-span-1">
                         <WaterIntakeCard />
                     </div>
+
 
                     {/* Deficiency Alert */}
                     <div className="md:col-span-2 lg:col-span-3">
