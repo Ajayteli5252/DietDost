@@ -23,6 +23,7 @@ app.use('/api/user', require('./routes/user.routes'));
 app.use('/api/meal', require('./routes/meal.routes'));
 app.use('/api/ai', require('./routes/ai.routes'));
 app.use('/api/streak', require('./routes/streak.routes'));
+app.use('/api/weight', require('./routes/weight.routes'));
 
 // Test route
 app.get('/', (req, res) => {
@@ -36,4 +37,16 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+});
+
+//Notification routes
+const cron = require('node-cron');
+const { sendDailyNotifications } = require('./controllers/notification.controller');
+
+// Routes ke saath add karo
+app.use('/api/notifications', require('./routes/notification.routes'));
+
+// Cron job - Run every minute to check for scheduled notifications
+cron.schedule('* * * * *', () => {
+    sendDailyNotifications();
 });

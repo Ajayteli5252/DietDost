@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { createNotification } = require('./notification.controller');
 
 // ================== GET STREAK ==================
 const getStreak = async (req, res) => {
@@ -31,10 +32,10 @@ const getStreak = async (req, res) => {
         const streakData = streak[0];
 
         // Aaj log kiya ya nahi check karo
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
         const lastLogDate = streakData.last_log_date
-            ? new Date(streakData.last_log_date).toISOString().split('T')[0]
+            ? new Date(streakData.last_log_date).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
             : null;
 
         // Agar last log 2 din se pehle hai to streak reset
@@ -70,8 +71,8 @@ const getStreak = async (req, res) => {
 const updateStreak = async (req, res) => {
     try {
         const userId = req.user.id;
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
         // Streak record lo
         let [streak] = await db.query(
@@ -85,6 +86,7 @@ const updateStreak = async (req, res) => {
                 'INSERT INTO streaks (user_id, current_streak, longest_streak, last_log_date) VALUES (?, 1, 1, ?)',
                 [userId, today]
             );
+            await createNotification(userId, 'streak', '🌱 Streak shuru ho gayi! Kal bhi log karna!');
             return res.status(200).json({
                 success: true,
                 data: {
@@ -98,7 +100,7 @@ const updateStreak = async (req, res) => {
 
         const streakData = streak[0];
         const lastLogDate = streakData.last_log_date
-            ? new Date(streakData.last_log_date).toISOString().split('T')[0]
+            ? new Date(streakData.last_log_date).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
             : null;
 
         // Aaj already log kiya hai
@@ -115,6 +117,7 @@ const updateStreak = async (req, res) => {
         }
 
         let newStreak;
+        let oldBadge = getBadge(streakData.current_streak);
 
         // Kal log kiya tha - streak continue
         if (lastLogDate === yesterday) {
@@ -125,6 +128,7 @@ const updateStreak = async (req, res) => {
         }
 
         const newLongest = Math.max(newStreak, streakData.longest_streak);
+        const newBadge = getBadge(newStreak);
 
         await db.query(
             `UPDATE streaks SET 
@@ -136,12 +140,24 @@ const updateStreak = async (req, res) => {
             [newStreak, newLongest, today, userId]
         );
 
+        // Trigger Notifications
+        if (newStreak === 1 && streakData.current_streak > 0) {
+            await createNotification(userId, 'streak', '😴 Streak reset ho gayi, par koi baat nahi! Nayi shuruat karo! 🌱');
+        } else if (newStreak > 1) {
+            await createNotification(userId, 'streak', `🔥 Streak updated: ${newStreak} days! Keep it up!`);
+        }
+
+        // New Badge Alert
+        if (newBadge.name !== oldBadge.name && newStreak > 0) {
+            await createNotification(userId, 'badge', `🏆 Congrats! You earned the ${newBadge.icon} ${newBadge.name} badge!`);
+        }
+
         res.status(200).json({
             success: true,
             data: {
                 current_streak: newStreak,
                 longest_streak: newLongest,
-                badge: getBadge(newStreak),
+                badge: newBadge,
                 message: getStreakMessage(newStreak),
             },
         });

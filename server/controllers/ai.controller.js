@@ -126,7 +126,7 @@ User: ${userMsg}`;
             const safeHistory = chatHistory.filter(m => m && typeof m.text === 'string').map(m => ({ role: m.role, text: m.text }));
             aiResponse = await askAIWithImage(contextPrompt, imageBase64, mimeType, userLanguage, safeHistory);
             // Clean up uploaded file
-            try { fs.unlinkSync(imageFile.path); } catch (e) {}
+            try { fs.unlinkSync(imageFile.path); } catch (e) { }
         } else {
             aiResponse = await askAI(contextPrompt, userLanguage, chatHistory);
         }
@@ -141,7 +141,7 @@ User: ${userMsg}`;
         console.error('AIChat error:', error?.message || error);
         if (error?.error) console.error('API Error detail:', JSON.stringify(error.error));
         // Clean up file if error
-        if (req.file) { try { fs.unlinkSync(req.file.path); } catch (e) {} }
+        if (req.file) { try { fs.unlinkSync(req.file.path); } catch (e) { } }
         res.status(500).json({ success: false, message: error?.message || 'Something went wrong!' });
     }
 };
@@ -233,4 +233,76 @@ const checkDeficiency = async (req, res) => {
     }
 };
 
-module.exports = { getDailySuggestion, aiChat, checkDeficiency };
+// ================== MEAL PLAN SUGGESTION ==================
+const getMealPlanSuggestion = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // User profile lo
+        const [profile] = await db.query(
+            `SELECT u.name, u.age, u.gender, u.state, p.goal, p.diet_type,
+        p.workout_type, p.daily_calorie_target, p.protein_target,
+        p.carbs_target, p.fat_target
+      FROM users u
+      LEFT JOIN user_profiles p ON u.id = p.user_id
+      WHERE u.id = ?`,
+            [userId]
+        );
+
+        const userProfile = profile[0];
+
+        const prompt = `Create a simple one day Indian meal plan for this user:
+- Age: ${userProfile?.age}, Gender: ${userProfile?.gender}
+- State: ${userProfile?.state} (suggest regional Indian foods)
+- Goal: ${userProfile?.goal}
+- Diet Type: ${userProfile?.diet_type}
+- Daily Calorie Target: ${userProfile?.daily_calorie_target} kcal
+- Protein Target: ${userProfile?.protein_target}g
+
+Rules:
+- Suggest simple, easily available Indian foods
+- Foods should be affordable and common
+- Keep it realistic for someone from ${userProfile?.state}
+- No exotic or expensive ingredients
+
+Reply ONLY in this JSON format, nothing else:
+{
+  "breakfast": { "meal": "food name", "calories": number, "protein": number, "tip": "one line tip" },
+  "lunch": { "meal": "food name", "calories": number, "protein": number, "tip": "one line tip" },
+  "dinner": { "meal": "food name", "calories": number, "protein": number, "tip": "one line tip" },
+  "snacks": { "meal": "food name", "calories": number, "protein": number, "tip": "one line tip" },
+  "total_calories": number,
+  "total_protein": number
+}`;
+
+        const aiResponse = await askAI(prompt);
+
+        let mealPlan;
+        try {
+            const cleanResponse = aiResponse.response
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
+            mealPlan = JSON.parse(cleanResponse);
+        } catch (e) {
+            return res.status(500).json({
+                success: false,
+                message: 'Could not generate meal plan, try again!',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            meal_plan: mealPlan,
+            calorie_target: userProfile?.daily_calorie_target,
+        });
+
+    } catch (error) {
+        console.error('MealPlanSuggestion error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Something went wrong!',
+        });
+    }
+};
+module.exports = { getDailySuggestion, aiChat, checkDeficiency, getMealPlanSuggestion };

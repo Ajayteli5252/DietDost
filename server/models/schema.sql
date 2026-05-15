@@ -89,6 +89,17 @@ CREATE TABLE ai_suggestions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- weight logs table
+CREATE TABLE IF NOT EXISTS weight_logs (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  weight FLOAT NOT NULL,
+  note VARCHAR(255),
+  log_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- streaks table
 USE dietdost;
 
@@ -99,5 +110,28 @@ CREATE TABLE streaks (
   longest_streak INT DEFAULT 0,
   last_log_date DATE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- notifications table
+
+CREATE TABLE notification_settings (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  meal_reminder BOOLEAN DEFAULT true,
+  water_reminder BOOLEAN DEFAULT true,
+  streak_reminder BOOLEAN DEFAULT true,
+  reminder_time VARCHAR(5) DEFAULT '08:00',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE notifications (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  type VARCHAR(50), -- 'streak', 'goal', 'badge', 'system'
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

@@ -8,6 +8,7 @@ const {
     getDailySuggestion,
     aiChat,
     checkDeficiency,
+    getMealPlanSuggestion,
 } = require('../controllers/ai.controller');
 
 // Ensure uploads directory exists
@@ -39,6 +40,7 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
 });
 
+router.get('/meal-plan', verifyToken, getMealPlanSuggestion);
 router.get('/suggestion', verifyToken, getDailySuggestion);
 router.post('/chat', verifyToken, upload.single('image'), aiChat);
 router.get('/deficiency', verifyToken, checkDeficiency);
