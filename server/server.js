@@ -22,6 +22,7 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/user', require('./routes/user.routes'));
 app.use('/api/meal', require('./routes/meal.routes'));
 app.use('/api/ai', require('./routes/ai.routes'));
+app.use('/api/streak', require('./routes/streak.routes'));
 
 // Test route
 app.get('/', (req, res) => {

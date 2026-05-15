@@ -88,3 +88,16 @@ CREATE TABLE ai_suggestions (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- streaks table
+USE dietdost;
+
+CREATE TABLE streaks (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  current_streak INT DEFAULT 0,
+  longest_streak INT DEFAULT 0,
+  last_log_date DATE,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
