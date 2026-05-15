@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import { useCalorie } from '../hooks/useCalorie';
 import { getMealLabel } from '../utils/calorieHelper';
+import { streakApi } from '../api/streakApi';
 
 const MealTrackerPage = () => {
     const navigate = useNavigate();
@@ -37,6 +38,9 @@ const MealTrackerPage = () => {
         } finally {
             setAdding(false);
         }
+
+        // handleAddMeal ke andar, setSuccess ke baad:
+        await streakApi.updateStreak();
     };
 
     return (
@@ -69,8 +73,8 @@ const MealTrackerPage = () => {
                                 key={type}
                                 onClick={() => setMealType(type)}
                                 className={`py-2 rounded-xl text-sm font-semibold transition-all ${mealType === type
-                                        ? 'bg-green-600 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {getMealLabel(type).split(' ')[1]}
