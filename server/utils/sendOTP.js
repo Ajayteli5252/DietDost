@@ -4,25 +4,30 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
 });
 
 // OTP generate karo
 const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 // OTP email bhejo
 const sendOTPEmail = async (email, otp) => {
-    const mailOptions = {
-        from: `"DietDost" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'DietDost - Email Verification OTP',
-        html: `
+  const mailOptions = {
+    from: `"DietDost" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'DietDost - Email Verification OTP',
+    html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
         <h2 style="color: #16a34a;">Welcome to DietDost! 🥗</h2>
         <p>Apna email verify karne ke liye neeche diya OTP use karo:</p>
@@ -35,9 +40,9 @@ const sendOTPEmail = async (email, otp) => {
         <p style="color: #999; font-size: 12px;">DietDost - Apni Diet Ka Dost 🌿</p>
       </div>
     `,
-    };
+  };
 
-    await transporter.sendMail(mailOptions);
+  await transporter.sendMail(mailOptions);
 };
 
 module.exports = { generateOTP, sendOTPEmail };
