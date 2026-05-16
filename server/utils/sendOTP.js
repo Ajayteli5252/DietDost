@@ -8,22 +8,32 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// OTP email bhejo via Resend API (HTTPS - works on Render)
+// OTP email bhejo via Brevo API (HTTPS - works on Render, sends to ANY email)
 const sendOTPEmail = async (email, otp) => {
-    const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    console.log('Resend API Key present:', !!RESEND_API_KEY);
+    const BREVO_API_KEY = process.env.BREVO_API_KEY;
+    const SENDER_EMAIL = process.env.SENDER_EMAIL || process.env.EMAIL_USER;
 
-    if (!RESEND_API_KEY) {
-        throw new Error('RESEND_API_KEY not set in environment variables!');
+    console.log('Brevo API Key present:', !!BREVO_API_KEY);
+    console.log('Sender Email:', SENDER_EMAIL);
+
+    if (!BREVO_API_KEY) {
+        throw new Error('BREVO_API_KEY not set in environment variables!');
+    }
+
+    if (!SENDER_EMAIL) {
+        throw new Error('SENDER_EMAIL not set in environment variables!');
     }
 
     const response = await axios.post(
-        'https://api.resend.com/emails',
+        'https://api.brevo.com/v3/smtp/email',
         {
-            from: 'DietDost <onboarding@resend.dev>',
-            to: [email],
+            sender: {
+                name: 'DietDost',
+                email: SENDER_EMAIL,
+            },
+            to: [{ email: email }],
             subject: 'DietDost - Email Verification OTP',
-            html: `
+            htmlContent: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px;">
           <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="color: #16a34a; margin: 0;">🥗 DietDost</h2>
@@ -50,7 +60,7 @@ const sendOTPEmail = async (email, otp) => {
         },
         {
             headers: {
-                Authorization: `Bearer ${RESEND_API_KEY}`,
+                'api-key': BREVO_API_KEY,
                 'Content-Type': 'application/json',
             },
         }

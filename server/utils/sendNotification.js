@@ -3,40 +3,41 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const RESEND_API_URL = 'https://api.resend.com/emails';
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-const sendResendEmail = async ({ to, subject, html }) => {
-    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const sendBrevoEmail = async ({ to, subject, html }) => {
+    const BREVO_API_KEY = process.env.BREVO_API_KEY;
+    const SENDER_EMAIL = process.env.SENDER_EMAIL || process.env.EMAIL_USER;
 
-    if (!RESEND_API_KEY) {
-        console.error('RESEND_API_KEY is not defined!');
+    if (!BREVO_API_KEY) {
+        console.error('BREVO_API_KEY is not defined!');
         return;
     }
 
     try {
         await axios.post(
-            RESEND_API_URL,
+            BREVO_API_URL,
             {
-                from: 'DietDost <onboarding@resend.dev>',
-                to: [to],
+                sender: { name: 'DietDost', email: SENDER_EMAIL },
+                to: [{ email: to }],
                 subject,
-                html,
+                htmlContent: html,
             },
             {
                 headers: {
-                    Authorization: `Bearer ${RESEND_API_KEY}`,
+                    'api-key': BREVO_API_KEY,
                     'Content-Type': 'application/json',
                 },
             }
         );
     } catch (error) {
-        console.error('Error sending email via Resend:', error.response?.data || error.message);
+        console.error('Error sending email via Brevo:', error.response?.data || error.message);
     }
 };
 
 // ================== MEAL REMINDER ==================
 const sendMealReminder = async (email, name) => {
-    await sendResendEmail({
+    await sendBrevoEmail({
         to: email,
         subject: '🍽️ Time to log your meal! - DietDost',
         html: `
@@ -48,9 +49,7 @@ const sendMealReminder = async (email, name) => {
           <h2 style="color: #1f2937;">Hey ${name}! 👋</h2>
           <p style="color: #6b7280;">Don't forget to log your meals today!</p>
           <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0;">
-            <p style="color: #16a34a; font-weight: bold; margin: 0;">
-              🍽️ Logging your meals helps you:
-            </p>
+            <p style="color: #16a34a; font-weight: bold; margin: 0;">🍽️ Logging your meals helps you:</p>
             <ul style="color: #374151; margin-top: 8px;">
               <li>Track your daily calories</li>
               <li>Monitor your nutrition</li>
@@ -63,8 +62,7 @@ const sendMealReminder = async (email, name) => {
           </a>
         </div>
         <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px;">
-          DietDost - Your Diet Friend 🌿<br/>
-          <a href="#" style="color: #9ca3af;">Unsubscribe from reminders</a>
+          DietDost - Your Diet Friend 🌿
         </p>
       </div>
     `,
@@ -73,7 +71,7 @@ const sendMealReminder = async (email, name) => {
 
 // ================== WATER REMINDER ==================
 const sendWaterReminder = async (email, name) => {
-    await sendResendEmail({
+    await sendBrevoEmail({
         to: email,
         subject: '💧 Have you had enough water today? - DietDost',
         html: `
@@ -87,11 +85,6 @@ const sendWaterReminder = async (email, name) => {
           <div style="background: #eff6ff; padding: 16px; border-radius: 8px; margin: 16px 0; text-align: center;">
             <p style="font-size: 48px; margin: 0;">💧💧💧💧</p>
             <p style="color: #3b82f6; font-weight: bold;">Target: 8 glasses = 2000ml</p>
-          </div>
-          <div style="background: #f0fdf4; padding: 12px; border-radius: 8px;">
-            <p style="color: #16a34a; margin: 0; font-size: 14px;">
-              💡 Tip: Drinking enough water helps with digestion, energy levels, and weight management!
-            </p>
           </div>
           <a href="https://diet-dost.vercel.app/dashboard" 
             style="display: block; background: #3b82f6; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 16px;">
@@ -108,7 +101,7 @@ const sendWaterReminder = async (email, name) => {
 
 // ================== STREAK REMINDER ==================
 const sendStreakReminder = async (email, name, currentStreak) => {
-    await sendResendEmail({
+    await sendBrevoEmail({
         to: email,
         subject: `🔥 Don't break your ${currentStreak} day streak! - DietDost`,
         html: `
@@ -121,12 +114,8 @@ const sendStreakReminder = async (email, name, currentStreak) => {
           <p style="color: #6b7280;">You have a <strong>${currentStreak} day streak</strong> going! Don't break it!</p>
           <div style="background: #fff7ed; padding: 16px; border-radius: 8px; margin: 16px 0; text-align: center;">
             <p style="font-size: 64px; margin: 0;">🔥</p>
-            <p style="color: #ea580c; font-size: 32px; font-weight: black; margin: 0;">${currentStreak} Days!</p>
-            <p style="color: #9a3412; margin: 4px 0 0;">Keep it going!</p>
+            <p style="color: #ea580c; font-size: 32px; margin: 0;">${currentStreak} Days!</p>
           </div>
-          <p style="color: #6b7280; font-size: 14px;">
-            Log at least one meal today to maintain your streak!
-          </p>
           <a href="https://diet-dost.vercel.app/meal-tracker" 
             style="display: block; background: #ea580c; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 16px;">
             Maintain My Streak 🔥
