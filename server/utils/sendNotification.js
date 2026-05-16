@@ -1,20 +1,42 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
+const RESEND_API_URL = 'https://api.resend.com/emails';
+
+const sendResendEmail = async ({ to, subject, html }) => {
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+    if (!RESEND_API_KEY) {
+        console.error('RESEND_API_KEY is not defined!');
+        return;
+    }
+
+    try {
+        await axios.post(
+            RESEND_API_URL,
+            {
+                from: 'DietDost <onboarding@resend.dev>',
+                to: [to],
+                subject,
+                html,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${RESEND_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+    } catch (error) {
+        console.error('Error sending email via Resend:', error.response?.data || error.message);
+    }
+};
 
 // ================== MEAL REMINDER ==================
 const sendMealReminder = async (email, name) => {
-    await transporter.sendMail({
-        from: `"DietDost" <${process.env.EMAIL_USER}>`,
+    await sendResendEmail({
         to: email,
         subject: '🍽️ Time to log your meal! - DietDost',
         html: `
@@ -35,7 +57,7 @@ const sendMealReminder = async (email, name) => {
               <li>Maintain your streak 🔥</li>
             </ul>
           </div>
-          <a href="http://localhost:5173/meal-tracker" 
+          <a href="https://diet-dost.vercel.app/meal-tracker" 
             style="display: block; background: #16a34a; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 16px;">
             Log My Meal Now 🚀
           </a>
@@ -51,8 +73,7 @@ const sendMealReminder = async (email, name) => {
 
 // ================== WATER REMINDER ==================
 const sendWaterReminder = async (email, name) => {
-    await transporter.sendMail({
-        from: `"DietDost" <${process.env.EMAIL_USER}>`,
+    await sendResendEmail({
         to: email,
         subject: '💧 Have you had enough water today? - DietDost',
         html: `
@@ -72,7 +93,7 @@ const sendWaterReminder = async (email, name) => {
               💡 Tip: Drinking enough water helps with digestion, energy levels, and weight management!
             </p>
           </div>
-          <a href="http://localhost:5173/dashboard" 
+          <a href="https://diet-dost.vercel.app/dashboard" 
             style="display: block; background: #3b82f6; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 16px;">
             Log My Water 💧
           </a>
@@ -87,8 +108,7 @@ const sendWaterReminder = async (email, name) => {
 
 // ================== STREAK REMINDER ==================
 const sendStreakReminder = async (email, name, currentStreak) => {
-    await transporter.sendMail({
-        from: `"DietDost" <${process.env.EMAIL_USER}>`,
+    await sendResendEmail({
         to: email,
         subject: `🔥 Don't break your ${currentStreak} day streak! - DietDost`,
         html: `
@@ -107,7 +127,7 @@ const sendStreakReminder = async (email, name, currentStreak) => {
           <p style="color: #6b7280; font-size: 14px;">
             Log at least one meal today to maintain your streak!
           </p>
-          <a href="http://localhost:5173/meal-tracker" 
+          <a href="https://diet-dost.vercel.app/meal-tracker" 
             style="display: block; background: #ea580c; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 16px;">
             Maintain My Streak 🔥
           </a>
