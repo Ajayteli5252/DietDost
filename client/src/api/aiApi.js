@@ -1,10 +1,10 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/ai` : 'https://dietdost.onrender.com/api/ai';
 
 export const aiApi = {
     getDailySuggestion: async () => {
-        const res = await apiClient.get('/ai/suggestion');
+        const res = await apiClient.get('ai/suggestion');
         return res.data;
     },
 
@@ -16,7 +16,7 @@ export const aiApi = {
             formData.append('message', message || 'Analyze this food image and tell me its nutrition details.');
             formData.append('chatHistory', JSON.stringify(cleanHistory));
             formData.append('image', imageFile);
-            const res = await apiClient.post('/ai/chat', formData, {
+            const res = await apiClient.post('ai/chat', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             return res.data;

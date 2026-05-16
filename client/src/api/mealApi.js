@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/meal` : 'https://dietdost.onrender.com/api/meal';
 
 export const mealApi = {
     addMeal: async (data) => {
@@ -19,17 +19,17 @@ export const mealApi = {
     },
 
     deleteMeal: async (id) => {
-        const res = await apiClient.delete('/meal/' + id);
+        const res = await apiClient.delete('meal/' + id);
         return res.data;
     },
 
     logWater: async (glasses) => {
-        const res = await apiClient.post('/meal/water', { glasses });
+        const res = await apiClient.post('meal/water', { glasses });
         return res.data;
     },
 
     getWeeklySummary: async () => {
-        const res = await apiClient.get('/meal/weekly');
+        const res = await apiClient.get('meal/weekly');
         return res.data;
     },
 };

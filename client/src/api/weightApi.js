@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/weight` : 'https://dietdost.onrender.com/api/weight';
 
 export const weightApi = {
     addWeight: async (weight, note = '') => {
@@ -14,7 +14,7 @@ export const weightApi = {
     },
 
     getWeightHistory: async () => {
-        const res = await apiClient.get('/weight/history');
+        const res = await apiClient.get('weight/history');
         return res.data;
     },
 };

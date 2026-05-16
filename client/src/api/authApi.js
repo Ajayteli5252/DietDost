@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/auth` : 'https://dietdost.onrender.com/api/auth';
 
 export const authApi = {
     signUp: async (userData) => {
@@ -14,17 +14,17 @@ export const authApi = {
     },
 
     resendOTP: async (email) => {
-        const res = await apiClient.post('/auth/resend-otp', { email });
+        const res = await apiClient.post('auth/resend-otp', { email });
         return res.data;
     },
 
     signIn: async (email, password) => {
-        const res = await apiClient.post('/auth/signin', { email, password });
+        const res = await apiClient.post('auth/signin', { email, password });
         return res.data;
     },
 
     getMe: async () => {
-        const res = await apiClient.get('/auth/me');
+        const res = await apiClient.get('auth/me');
         return res.data;
     },
 };

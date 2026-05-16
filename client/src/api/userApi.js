@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/user` : 'https://dietdost.onrender.com/api/user';
 
 export const userApi = {
     saveOnboarding: async (data) => {
