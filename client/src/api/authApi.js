@@ -1,5 +1,7 @@
 import apiClient from './apiClient';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
+
 export const authApi = {
     signUp: async (userData) => {
         const res = await apiClient.post('/auth/signup', userData);

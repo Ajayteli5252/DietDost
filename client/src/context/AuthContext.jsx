@@ -1,6 +1,8 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import apiClient from '../api/apiClient';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
+
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {

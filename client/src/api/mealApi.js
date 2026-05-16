@@ -1,5 +1,7 @@
 import apiClient from './apiClient';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
+
 export const mealApi = {
     addMeal: async (data) => {
         const res = await apiClient.post('/meal/add', data);
