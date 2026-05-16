@@ -30,27 +30,42 @@ const signUp = async (req, res) => {
 
         // Email already exists?
         const [existingUser] = await db.query(
-            'SELECT id FROM users WHERE email = ?',
+            'SELECT id, is_verified FROM users WHERE email = ?',
             [email]
         );
 
         if (existingUser.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Ye email already registered hai!',
-            });
+            // Agar user verified hai toh block karo
+            if (existingUser[0].is_verified) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Ye email already registered hai!',
+                });
+            }
+            
+            // Agar user verified nahi hai, toh purana record update karke naya OTP bhej sakte hain
+            // Hum aage badhne denge, insertion ki jagah update karenge neeche
         }
 
         // Password hash karo
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // User banao
-        const [result] = await db.query(
-            'INSERT INTO users (name, email, password, age, gender, state) VALUES (?, ?, ?, ?, ?, ?)',
-            [name, email, hashedPassword, age, gender, state]
-        );
-
-        const userId = result.insertId;
+        let userId;
+        if (existingUser.length > 0) {
+            // Update existing unverified user
+            await db.query(
+                'UPDATE users SET name = ?, password = ?, age = ?, gender = ?, state = ? WHERE id = ?',
+                [name, hashedPassword, age, gender, state, existingUser[0].id]
+            );
+            userId = existingUser[0].id;
+        } else {
+            // Create new user
+            const [result] = await db.query(
+                'INSERT INTO users (name, email, password, age, gender, state) VALUES (?, ?, ?, ?, ?, ?)',
+                [name, email, hashedPassword, age, gender, state]
+            );
+            userId = result.insertId;
+        }
 
         // OTP generate karo
         const otp = generateOTP();
