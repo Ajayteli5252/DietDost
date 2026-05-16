@@ -11,6 +11,7 @@ const generateOTP = () => {
 // OTP email bhejo via Resend API (HTTPS - works on Render)
 const sendOTPEmail = async (email, otp) => {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    console.log('Resend API Key present:', !!RESEND_API_KEY);
 
     if (!RESEND_API_KEY) {
         throw new Error('RESEND_API_KEY not set in environment variables!');

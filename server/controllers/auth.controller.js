@@ -17,6 +17,7 @@ const generateToken = (userId, email) => {
 
 // ================== SIGN UP ==================
 const signUp = async (req, res) => {
+    console.log('SignUp request received for:', req.body.email);
     try {
         const { name, email, password, age, gender, state } = req.body;
 
@@ -42,9 +43,6 @@ const signUp = async (req, res) => {
                     message: 'Ye email already registered hai!',
                 });
             }
-            
-            // Agar user verified nahi hai, toh purana record update karke naya OTP bhej sakte hain
-            // Hum aage badhne denge, insertion ki jagah update karenge neeche
         }
 
         // Password hash karo
@@ -81,7 +79,13 @@ const signUp = async (req, res) => {
         );
 
         // OTP email bhejo
-        await sendOTPEmail(email, otp);
+        try {
+            await sendOTPEmail(email, otp);
+        } catch (emailError) {
+            console.error('Email sending failed during signup:', emailError.response?.data || emailError.message);
+            // We still proceed or throw? Throwing is safer for the user to know it failed.
+            throw new Error(`Email failed: ${emailError.message}`);
+        }
 
         res.status(201).json({
             success: true,
@@ -90,10 +94,11 @@ const signUp = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('SignUp error:', error);
+        console.error('CRITICAL SignUp error:', error);
         res.status(500).json({
             success: false,
             message: 'Kuch gadbad ho gayi, dobara try karo!',
+            error: error.message // Temporarily show error message to user for debugging
         });
     }
 };
