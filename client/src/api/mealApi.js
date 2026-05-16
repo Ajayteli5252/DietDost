@@ -1,20 +1,20 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
 
 export const mealApi = {
     addMeal: async (data) => {
-        const res = await apiClient.post('/meal/add', data);
+        const res = await apiClient.post('meal/add', data);
         return res.data;
     },
 
     getTodayMeals: async () => {
-        const res = await apiClient.get('/meal/today');
+        const res = await apiClient.get('meal/today');
         return res.data;
     },
 
     getMealsByDate: async (date) => {
-        const res = await apiClient.get('/meal/date/' + date);
+        const res = await apiClient.get('meal/date/' + date);
         return res.data;
     },
 

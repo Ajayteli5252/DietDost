@@ -1,15 +1,15 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
 
 export const streakApi = {
     getStreak: async () => {
-        const res = await apiClient.get('/streak');
+        const res = await apiClient.get('streak');
         return res.data;
     },
 
     updateStreak: async () => {
-        const res = await apiClient.post('/streak/update');
+        const res = await apiClient.post('streak/update');
         return res.data;
     },
 };

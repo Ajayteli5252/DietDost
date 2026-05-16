@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import apiClient from '../api/apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
 
 export const AuthContext = createContext(null);
 
@@ -36,13 +36,13 @@ export const AuthProvider = ({ children }) => {
 
     // Sign Up
     const signUp = async (userData) => {
-        const res = await apiClient.post('/auth/signup', userData);
+        const res = await apiClient.post('auth/signup', userData);
         return res.data;
     };
 
     // Verify OTP
     const verifyOTP = async (email, otp) => {
-        const res = await apiClient.post('/auth/verify-otp', { email, otp });
+        const res = await apiClient.post('auth/verify-otp', { email, otp });
 
         if (res.data.success) {
             const { token, user } = res.data;

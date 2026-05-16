@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api/';
 
 export const aiApi = {
     getDailySuggestion: async () => {
@@ -21,17 +21,17 @@ export const aiApi = {
             });
             return res.data;
         }
-        const res = await apiClient.post('/ai/chat', { message, chatHistory: cleanHistory });
+        const res = await apiClient.post('ai/chat', { message, chatHistory: cleanHistory });
         return res.data;
     },
 
     checkDeficiency: async () => {
-        const res = await apiClient.get('/ai/deficiency');
+        const res = await apiClient.get('ai/deficiency');
         return res.data;
     },
 
     getMealPlan: async () => {
-        const res = await apiClient.get('/ai/meal-plan');
+        const res = await apiClient.get('ai/meal-plan');
         return res.data;
     },
 };
