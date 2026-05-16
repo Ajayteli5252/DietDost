@@ -9,12 +9,23 @@ const DeficiencyPage = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
+    const [error, setError] = useState(null);
+
     const fetchDeficiency = async () => {
         try {
+            setLoading(true);
+            setError(null);
             const res = await aiApi.checkDeficiency();
-            if (res.success) setData(res.data);
+            console.log('Deficiency res:', res);
+            if (res && res.success && res.data) {
+                setData(res.data);
+            } else {
+                setError(res?.message || 'AI analysis failed. Please try again.');
+            }
         } catch (error) {
-            console.error('Deficiency error:', error);
+            console.error('Deficiency fetch error:', error);
+            const msg = error.response?.data?.message || error.message || 'Failed to connect to server.';
+            setError(msg);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -52,10 +63,22 @@ const DeficiencyPage = () => {
                             <div key={i} className="h-32 bg-white rounded-2xl animate-pulse"></div>
                         ))}
                     </div>
+                ) : error ? (
+                    <div className="bg-white rounded-2xl p-8 border border-red-100 text-center shadow-sm">
+                        <p className="text-5xl mb-4">❌</p>
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Analysis Failed</h2>
+                        <p className="text-red-500 mb-6">{error}</p>
+                        <button 
+                            onClick={fetchDeficiency}
+                            className="bg-green-600 text-white px-6 py-2 rounded-xl font-semibold"
+                        >
+                            Try Again
+                        </button>
+                    </div>
                 ) : !data ? (
                     <div className="text-center py-12">
                         <p className="text-5xl mb-3">📊</p>
-                        <p className="text-gray-500">Failed to load data!</p>
+                        <p className="text-gray-500">No analysis data available.</p>
                     </div>
                 ) : data.deficiencies.length === 0 ? (
                     <div className="bg-green-50 rounded-2xl p-8 border border-green-200 text-center">

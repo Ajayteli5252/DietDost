@@ -4,6 +4,7 @@ import Navbar from '../components/common/Navbar';
 import { useAuth } from '../hooks/useAuth';
 import { userApi } from '../api/userApi';
 import { getGoalLabel } from '../utils/calorieHelper';
+import { notificationApi } from '../api/notificationApi';
 
 const ProfilePage = () => {
     const navigate = useNavigate();
@@ -24,6 +25,47 @@ const ProfilePage = () => {
         };
         fetchProfile();
     }, []);
+
+    const [notifSettings, setNotifSettings] = useState({
+        meal_reminder: true,
+        water_reminder: true,
+        streak_reminder: true,
+        reminder_time: '19:00',
+    });
+    const [notifLoading, setNotifLoading] = useState(false);
+    const [notifSuccess, setNotifSuccess] = useState('');
+
+    useEffect(() => {
+        const fetchNotifSettings = async () => {
+            try {
+                const res = await notificationApi.getSettings();
+                if (res.success) {
+                    // Ensure reminder_time is HH:mm format for the input
+                    const settings = res.settings;
+                    if (settings.reminder_time && settings.reminder_time.length > 5) {
+                        settings.reminder_time = settings.reminder_time.substring(0, 5);
+                    }
+                    setNotifSettings(settings);
+                }
+            } catch (error) {
+                console.error('Notification settings error:', error);
+            }
+        };
+        fetchNotifSettings();
+    }, []);
+
+    const handleNotifUpdate = async (key, value) => {
+        const updated = { ...notifSettings, [key]: value };
+        setNotifSettings(updated);
+        try {
+            setNotifLoading(true);
+            await notificationApi.updateSettings(updated);
+        } catch (error) {
+            console.error('Update error:', error);
+        } finally {
+            setNotifLoading(false);
+        }
+    };
 
     const handleSignOut = () => {
         signOut();
@@ -122,6 +164,103 @@ const ProfilePage = () => {
                         >
                             ✏️ Update Goals
                         </button>
+
+                        {/* Notification Settings */}
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-4">
+                            <h3 className="font-bold text-gray-800 mb-4">🔔 Notification Settings</h3>
+
+                            {notifSuccess && (
+                                <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl mb-4 text-sm">
+                                    ✅ {notifSuccess}
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                {/* Meal Reminder */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">🍽️</span>
+                                        <div>
+                                            <p className="font-medium text-gray-800 text-sm">Meal Reminder</p>
+                                            <p className="text-xs text-gray-400">Daily reminder to log meals</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => handleNotifUpdate('meal_reminder', !notifSettings.meal_reminder)}
+                                            className={`w-12 h-6 rounded-full transition-all ${notifSettings.meal_reminder ? 'bg-green-500' : 'bg-gray-200'
+                                                }`}
+                                        >
+                                            <div className={`w-5 h-5 bg-white rounded-full shadow transition-all mx-0.5 ${notifSettings.meal_reminder ? 'translate-x-6' : 'translate-x-0'
+                                                }`}></div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Water Reminder */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">💧</span>
+                                        <div>
+                                            <p className="font-medium text-gray-800 text-sm">Water Reminder</p>
+                                            <p className="text-xs text-gray-400">Daily reminder to stay hydrated</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => handleNotifUpdate('water_reminder', !notifSettings.water_reminder)}
+                                            className={`w-12 h-6 rounded-full transition-all ${notifSettings.water_reminder ? 'bg-blue-500' : 'bg-gray-200'
+                                                }`}
+                                        >
+                                            <div className={`w-5 h-5 bg-white rounded-full shadow transition-all mx-0.5 ${notifSettings.water_reminder ? 'translate-x-6' : 'translate-x-0'
+                                                }`}></div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Streak Reminder */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">🔥</span>
+                                        <div>
+                                            <p className="font-medium text-gray-800 text-sm">Streak Reminder</p>
+                                            <p className="text-xs text-gray-400">Don't break your streak!</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => handleNotifUpdate('streak_reminder', !notifSettings.streak_reminder)}
+                                            className={`w-12 h-6 rounded-full transition-all ${notifSettings.streak_reminder ? 'bg-orange-500' : 'bg-gray-200'
+                                                }`}
+                                        >
+                                            <div className={`w-5 h-5 bg-white rounded-full shadow transition-all mx-0.5 ${notifSettings.streak_reminder ? 'translate-x-6' : 'translate-x-0'
+                                                }`}></div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Reminder Time */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">⏰</span>
+                                        <div>
+                                            <p className="font-medium text-gray-800 text-sm">Reminder Time</p>
+                                            <p className="text-xs text-gray-400">When to send daily reminders</p>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="time"
+                                        value={notifSettings.reminder_time}
+                                        onChange={(e) => handleNotifUpdate('reminder_time', e.target.value)}
+                                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+                                    />
+                                </div>
+                            </div>
+
+                            {notifLoading && (
+                                <p className="text-xs text-gray-400 text-center mt-3">Saving...</p>
+                            )}
+                        </div>
 
                         {/* Sign Out */}
                         <button

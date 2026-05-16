@@ -5,6 +5,7 @@ const WaterIntakeCard = () => {
     const { logWater } = useCalorie();
     const [glasses, setGlasses] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [lastAdded, setLastAdded] = useState(null);
     const target = 8;
 
     // Load from LocalStorage with IST date
@@ -17,9 +18,12 @@ const WaterIntakeCard = () => {
     const handleAddGlass = async () => {
         if (glasses >= target) return;
         const newGlasses = glasses + 1;
+        setLastAdded(newGlasses - 1); // index of newly filled glass
         setGlasses(newGlasses);
 
-        // Save to LocalStorage with IST date
+        // Clear animation flag after animation completes
+        setTimeout(() => setLastAdded(null), 450);
+
         const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
         localStorage.setItem(`water_${today}`, newGlasses.toString());
 
@@ -52,8 +56,8 @@ const WaterIntakeCard = () => {
 
     const getWaterMessage = () => {
         if (glasses === 0) return "Start drinking water! 💧";
-        if (glasses < 4) return "Drink a bit more! 😊";
-        if (glasses < 8) return "Doing great! 👍";
+        if (glasses < 4)  return "Drink a bit more! 😊";
+        if (glasses < 8)  return "Doing great! 👍";
         return "Target reached! 🎉";
     };
 
@@ -61,39 +65,43 @@ const WaterIntakeCard = () => {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-full">
             <h3 className="font-bold text-gray-800 mb-4">💧 Water Tracker</h3>
 
-            {/* Water Glasses Visual */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
-                {Array.from({ length: target }).map((_, index) => (
-                    <div
-                        key={index}
-                        className={`aspect-square rounded-xl flex items-center justify-center text-2xl transition-all ${index < glasses
-                                ? 'bg-blue-100 scale-105'
-                                : 'bg-gray-100'
-                            }`}
-                    >
-                        {index < glasses ? '💧' : '🫙'}
-                    </div>
-                ))}
+            {/* Compact 4×2 Glass Grid */}
+            <div className="grid grid-cols-4 gap-1.5 mb-4">
+                {Array.from({ length: target }).map((_, index) => {
+                    const isFilled = index < glasses;
+                    const isNew    = index === lastAdded;
+                    return (
+                        <div
+                            key={index}
+                            className={`
+                                aspect-square rounded-lg flex items-center justify-center text-base
+                                transition-all duration-300
+                                ${isFilled ? 'bg-blue-100 shadow-inner' : 'bg-gray-100'}
+                                ${isNew ? 'animate-glass-wave' : ''}
+                            `}
+                        >
+                            {isFilled ? '💧' : '🫙'}
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Progress */}
+            {/* Progress Bar */}
             <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600 font-medium">{glasses} / {target} glasses</span>
                     <span className="text-blue-600 font-bold">{percent}%</span>
                 </div>
-                <div className="h-3 bg-blue-100 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-blue-100 rounded-full overflow-hidden">
                     <div
-                        className="h-3 bg-blue-500 rounded-full transition-all duration-500"
+                        className="h-2.5 bg-blue-500 rounded-full transition-all duration-500"
                         style={{ width: `${percent}%` }}
-                    ></div>
+                    />
                 </div>
             </div>
 
             {/* Message */}
-            <p className="text-center text-sm text-gray-500 mb-4">
-                {getWaterMessage()}
-            </p>
+            <p className="text-center text-sm text-gray-500 mb-4">{getWaterMessage()}</p>
 
             {/* Buttons */}
             <div className="flex gap-3">
@@ -102,12 +110,12 @@ const WaterIntakeCard = () => {
                     disabled={glasses <= 0}
                     className="flex-1 border-2 border-gray-200 hover:border-red-300 hover:text-red-500 disabled:opacity-30 text-gray-500 py-2 rounded-xl font-bold text-lg transition-all"
                 >
-                    -
+                    −
                 </button>
                 <button
                     onClick={handleAddGlass}
                     disabled={glasses >= target || loading}
-                    className="flex-2 flex-grow bg-blue-500 hover:bg-blue-600 disabled:bg-blue-200 text-white py-2 rounded-xl font-semibold text-sm transition-all"
+                    className="flex-grow bg-blue-500 hover:bg-blue-600 disabled:bg-blue-200 text-white py-2 rounded-xl font-semibold text-sm transition-all active:scale-95"
                 >
                     {loading ? '...' : '+ Add Glass 💧'}
                 </button>

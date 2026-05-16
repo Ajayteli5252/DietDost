@@ -1,15 +1,13 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api/streak';
+import apiClient from './apiClient';
 
 export const streakApi = {
     getStreak: async () => {
-        const res = await axios.get(`${API_URL}/`);
+        const res = await apiClient.get('/streak');
         return res.data;
     },
 
     updateStreak: async () => {
-        const res = await axios.post(`${API_URL}/update`);
+        const res = await apiClient.post('/streak/update');
         return res.data;
     },
 };

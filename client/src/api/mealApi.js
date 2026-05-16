@@ -1,35 +1,33 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api/meal';
+import apiClient from './apiClient';
 
 export const mealApi = {
     addMeal: async (data) => {
-        const res = await axios.post(`${API_URL}/add`, data);
+        const res = await apiClient.post('/meal/add', data);
         return res.data;
     },
 
     getTodayMeals: async () => {
-        const res = await axios.get(`${API_URL}/today`);
+        const res = await apiClient.get('/meal/today');
         return res.data;
     },
 
     getMealsByDate: async (date) => {
-        const res = await axios.get(`${API_URL}/date/${date}`);
+        const res = await apiClient.get('/meal/date/' + date);
         return res.data;
     },
 
     deleteMeal: async (id) => {
-        const res = await axios.delete(`${API_URL}/${id}`);
+        const res = await apiClient.delete('/meal/' + id);
         return res.data;
     },
 
     logWater: async (glasses) => {
-        const res = await axios.post(`${API_URL}/water`, { glasses });
+        const res = await apiClient.post('/meal/water', { glasses });
         return res.data;
     },
 
     getWeeklySummary: async () => {
-        const res = await axios.get(`${API_URL}/weekly`);
+        const res = await apiClient.get('/meal/weekly');
         return res.data;
     },
 };

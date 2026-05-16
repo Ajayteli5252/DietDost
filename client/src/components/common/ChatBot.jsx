@@ -239,7 +239,7 @@ const ChatBot = () => {
             />
 
             {/* ── Floating Button + Badge ── */}
-            <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
+            <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[9999] flex flex-col items-end gap-3">
 
                 {/* ── FAB Button ── */}
                 {!isOpen ? (
@@ -277,7 +277,7 @@ const ChatBot = () => {
             {/* ── Chat Window ── */}
             {isOpen && (
                 <div
-                    className="fixed bottom-28 right-6 z-[9998] w-[92vw] sm:w-[420px] flex flex-col overflow-hidden"
+                    className="fixed bottom-36 md:bottom-28 right-4 md:right-6 z-[9998] w-[92vw] sm:w-[420px] flex flex-col overflow-hidden"
                     style={{
                         height: 'min(580px, calc(100vh - 130px))',
                         background: 'rgba(255,255,255,0.92)',

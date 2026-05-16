@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import apiClient from '../api/apiClient';
 
 export const useCalorie = () => {
     const [todayMeals, setTodayMeals] = useState([]);
@@ -18,7 +16,7 @@ export const useCalorie = () => {
     const fetchTodayMeals = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_URL}/meal/today`);
+            const res = await apiClient.get('/meal/today');
             if (res.data.success) {
                 setTodayMeals(res.data.meals);
                 setTotals(res.data.totals);
@@ -34,7 +32,7 @@ export const useCalorie = () => {
     // Meal add karo
     const addMeal = async (mealData) => {
         try {
-            const res = await axios.post(`${API_URL}/meal/add`, mealData);
+            const res = await apiClient.post('/meal/add', mealData);
             if (res.data.success) {
                 await fetchTodayMeals(); // Refresh karo
             }
@@ -48,7 +46,7 @@ export const useCalorie = () => {
     // Meal delete karo
     const deleteMeal = async (id) => {
         try {
-            await axios.delete(`${API_URL}/meal/${id}`);
+            await apiClient.delete('/meal/' + id);
             await fetchTodayMeals(); // Refresh karo
         } catch (error) {
             console.error('DeleteMeal error:', error);
@@ -59,7 +57,7 @@ export const useCalorie = () => {
     // Water log karo
     const logWater = async (glasses) => {
         try {
-            const res = await axios.post(`${API_URL}/meal/water`, { glasses });
+            const res = await apiClient.post('/meal/water', { glasses });
             return res.data;
         } catch (error) {
             console.error('LogWater error:', error);

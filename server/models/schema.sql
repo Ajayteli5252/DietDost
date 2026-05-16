@@ -101,7 +101,6 @@ CREATE TABLE IF NOT EXISTS weight_logs (
 );
 
 -- streaks table
-USE dietdost;
 
 CREATE TABLE streaks (
   id INT PRIMARY KEY AUTO_INCREMENT,

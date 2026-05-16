@@ -1,20 +1,18 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api/user';
+import apiClient from './apiClient';
 
 export const userApi = {
     saveOnboarding: async (data) => {
-        const res = await axios.post(`${API_URL}/onboarding`, data);
+        const res = await apiClient.post('/user/onboarding', data);
         return res.data;
     },
 
     getProfile: async () => {
-        const res = await axios.get(`${API_URL}/profile`);
+        const res = await apiClient.get('/user/profile');
         return res.data;
     },
 
     updateProfile: async (data) => {
-        const res = await axios.put(`${API_URL}/profile`, data);
+        const res = await apiClient.put('/user/profile', data);
         return res.data;
     },
 };

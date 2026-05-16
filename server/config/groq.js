@@ -85,7 +85,7 @@ const askAI = async (prompt, userLanguage = null, chatHistory = []) => {
 // Vision model for image analysis
 const askAIWithImage = async (prompt, imageBase64, mimeType, userLanguage = 'english', chatHistory = []) => {
     const language = userLanguage;
-    const visionModel = process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
+    const visionModel = process.env.GROQ_VISION_MODEL || 'llama-3.2-11b-vision-preview';
 
     const historyMessages = chatHistory.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
@@ -125,4 +125,37 @@ const askAIWithImage = async (prompt, imageBase64, mimeType, userLanguage = 'eng
     }
 };
 
-module.exports = { askAI, askAIWithImage, detectLanguage };
+const askAIJSON = async (prompt, model = null) => {
+    try {
+        const completion = await groq.chat.completions.create({
+            messages: [
+                { 
+                    role: 'system', 
+                    content: 'You are a nutrition expert. You MUST respond ONLY in valid JSON format as requested. Do NOT include any markdown blocks or extra text.' 
+                },
+                { role: 'user', content: prompt },
+            ],
+            model: model || process.env.GROQ_MODEL || 'llama3-8b-8192',
+            temperature: 0.1,
+            max_tokens: 500,
+            response_format: { type: "json_object" }
+        });
+
+        return {
+            response: completion.choices[0]?.message?.content || '{}',
+        };
+    } catch (error) {
+        console.error('askAIJSON error:', error.message);
+        // Fallback
+        try {
+            const fallback = await askAI(prompt + " (Respond in JSON format)", null, []);
+            let clean = fallback.response.replace(/```json/g, '').replace(/```/g, '').trim();
+            return { response: clean };
+        } catch (inner) {
+            console.error('AI Fallback failed too:', inner.message);
+            throw inner; // Re-throw to be caught by controller
+        }
+    }
+};
+
+module.exports = { askAI, askAIWithImage, askAIJSON, detectLanguage };

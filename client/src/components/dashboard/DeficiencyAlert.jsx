@@ -12,6 +12,36 @@ const renderBold = (str) => {
     );
 };
 
+const severityConfig = {
+    low: {
+        bg:     'bg-yellow-50',
+        border: 'border-l-yellow-400',
+        borderFull: 'border-yellow-200',
+        badge:  'bg-yellow-100 text-yellow-700',
+        icon:   '⚠️',
+        title:  'text-yellow-700',
+        pulse:  false,
+    },
+    medium: {
+        bg:     'bg-orange-50',
+        border: 'border-l-orange-500',
+        borderFull: 'border-orange-200',
+        badge:  'bg-orange-100 text-orange-700',
+        icon:   '🔶',
+        title:  'text-orange-700',
+        pulse:  false,
+    },
+    high: {
+        bg:     'bg-red-50',
+        border: 'border-l-red-500',
+        borderFull: 'border-red-200',
+        badge:  'bg-red-100 text-red-700',
+        icon:   '🔴',
+        title:  'text-red-700',
+        pulse:  true,
+    },
+};
+
 const DeficiencyAlert = () => {
     const navigate = useNavigate();
     const [data, setData] = useState(null);
@@ -42,13 +72,11 @@ const DeficiencyAlert = () => {
 
     if (!data || data.deficiencies.length === 0) {
         return (
-            <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
+            <div className="bg-green-50 rounded-2xl p-6 border border-green-200 border-l-4 border-l-green-500 animate-fade-in">
                 <div className="flex items-center gap-3">
                     <span className="text-3xl">✅</span>
                     <div>
-                        <h3 className="font-bold text-green-700">
-                            No Deficiencies Found!
-                        </h3>
+                        <h3 className="font-bold text-green-700">No Deficiencies Found!</h3>
                         <p className="text-green-600 text-sm mt-1">
                             Your diet seems well-balanced. Keep up the good work! 🎉
                         </p>
@@ -58,57 +86,32 @@ const DeficiencyAlert = () => {
         );
     }
 
-    const severityConfig = {
-        low: {
-            bg: 'bg-yellow-50',
-            border: 'border-yellow-200',
-            badge: 'bg-yellow-100 text-yellow-700',
-            icon: '⚠️',
-            title: 'text-yellow-700',
-        },
-        medium: {
-            bg: 'bg-orange-50',
-            border: 'border-orange-200',
-            badge: 'bg-orange-100 text-orange-700',
-            icon: '🔶',
-            title: 'text-orange-700',
-        },
-        high: {
-            bg: 'bg-red-50',
-            border: 'border-red-200',
-            badge: 'bg-red-100 text-red-700',
-            icon: '🔴',
-            title: 'text-red-700',
-        },
-    };
-
     const config = severityConfig[data.severity] || severityConfig.low;
 
     return (
-        <div className={`${config.bg} rounded-2xl p-6 border ${config.border}`}>
+        <div className={`${config.bg} rounded-2xl p-6 border ${config.borderFull} border-l-4 ${config.border} animate-fade-in`}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <span className="text-2xl">{config.icon}</span>
-                    <h3 className={`font-bold text-lg ${config.title}`}>
-                        Deficiency Alert
-                    </h3>
+                    <h3 className={`font-bold text-lg ${config.title}`}>Deficiency Alert</h3>
                 </div>
-                <span className={`${config.badge} px-3 py-1 rounded-full text-xs font-bold uppercase`}>
+                <span
+                    className={`${config.badge} px-3 py-1 rounded-full text-xs font-bold uppercase ${config.pulse ? 'animate-pulse-red' : ''}`}
+                >
                     {data.severity} severity
                 </span>
             </div>
 
-            {/* Deficiencies */}
+            {/* Deficiency Tags — stagger in */}
             <div className="mb-4">
-                <p className="text-sm font-semibold text-gray-600 mb-2">
-                    Potential deficiencies detected:
-                </p>
+                <p className="text-sm font-semibold text-gray-600 mb-2">Potential deficiencies detected:</p>
                 <div className="flex flex-wrap gap-2">
                     {data.deficiencies.map((def, index) => (
                         <span
                             key={index}
-                            className={`${config.badge} px-3 py-1 rounded-full text-sm font-medium`}
+                            className={`${config.badge} px-3 py-1 rounded-full text-sm font-medium animate-fade-in-up`}
+                            style={{ animationDelay: `${index * 80}ms` }}
                         >
                             {def}
                         </span>
@@ -119,14 +122,13 @@ const DeficiencyAlert = () => {
             {/* Foods to Add */}
             {data.foods_to_add?.length > 0 && (
                 <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">
-                        Consider adding these to your diet:
-                    </p>
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Consider adding these to your diet:</p>
                     <div className="flex flex-wrap gap-2">
                         {data.foods_to_add.map((food, index) => (
                             <span
                                 key={index}
-                                className="bg-white text-gray-700 border border-gray-200 px-3 py-1 rounded-full text-sm"
+                                className="bg-white text-gray-700 border border-gray-200 px-3 py-1 rounded-full text-sm animate-fade-in"
+                                style={{ animationDelay: `${index * 60}ms` }}
                             >
                                 🥗 {renderBold(food)}
                             </span>
@@ -138,12 +140,14 @@ const DeficiencyAlert = () => {
             {/* Suggestions */}
             {data.suggestions?.length > 0 && (
                 <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">
-                        AI Suggestions:
-                    </p>
+                    <p className="text-sm font-semibold text-gray-600 mb-2">AI Suggestions:</p>
                     <ul className="space-y-1">
                         {data.suggestions.map((suggestion, index) => (
-                            <li key={index} className="text-sm text-gray-600 flex gap-2">
+                            <li
+                                key={index}
+                                className="text-sm text-gray-600 flex gap-2 animate-slide-in-left"
+                                style={{ animationDelay: `${index * 60}ms` }}
+                            >
                                 <span>•</span>
                                 <span>{renderBold(suggestion)}</span>
                             </li>
@@ -155,7 +159,7 @@ const DeficiencyAlert = () => {
             {/* CTA */}
             <button
                 onClick={() => navigate('/deficiency')}
-                className="w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 py-2 rounded-xl text-sm font-semibold transition-all mt-2"
+                className="w-full bg-white hover:bg-gray-50 active:scale-95 border border-gray-200 text-gray-700 py-2 rounded-xl text-sm font-semibold transition-all mt-2 hover:shadow-sm"
             >
                 View Detailed Report →
             </button>
