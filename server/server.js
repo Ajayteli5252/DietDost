@@ -50,3 +50,10 @@ app.use('/api/notifications', require('./routes/notification.routes'));
 cron.schedule('* * * * *', () => {
     sendDailyNotifications();
 });
+
+app.use(cors({
+    origin: function (origin, callback) {
+        callback(null, true);
+    },
+    credentials: true
+}));
