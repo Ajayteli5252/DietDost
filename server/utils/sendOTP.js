@@ -1,52 +1,61 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // port 587 ke liye false
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  // Timeouts for Render reliability
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000,
-});
-
 // OTP generate karo
 const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+    return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// OTP email bhejo
+// OTP email bhejo via Resend API (HTTPS - works on Render)
 const sendOTPEmail = async (email, otp) => {
-  const mailOptions = {
-    from: `"DietDost" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: 'DietDost - Email Verification OTP',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #16a34a;">Welcome to DietDost! 🥗</h2>
-        <p>Apna email verify karne ke liye neeche diya OTP use karo:</p>
-        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center;">
-          <h1 style="color: #16a34a; letter-spacing: 8px;">${otp}</h1>
-        </div>
-        <p style="color: #666;">Ye OTP sirf <strong>10 minutes</strong> ke liye valid hai.</p>
-        <p style="color: #666;">Agar aapne signup nahi kiya to is email ko ignore karo.</p>
-        <hr style="border: 1px solid #e5e7eb;">
-        <p style="color: #999; font-size: 12px;">DietDost - Apni Diet Ka Dost 🌿</p>
-      </div>
-    `,
-  };
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-  await transporter.sendMail(mailOptions);
+    if (!RESEND_API_KEY) {
+        throw new Error('RESEND_API_KEY not set in environment variables!');
+    }
+
+    const response = await axios.post(
+        'https://api.resend.com/emails',
+        {
+            from: 'DietDost <onboarding@resend.dev>',
+            to: [email],
+            subject: 'DietDost - Email Verification OTP',
+            html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #16a34a; margin: 0;">🥗 DietDost</h2>
+            <p style="color: #666; margin-top: 5px;">Welcome to your Diet Assistant!</p>
+          </div>
+          
+          <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <h3 style="color: #333; margin-top: 0;">Email Verification</h3>
+            <p style="color: #555;">Use the OTP below to verify your email:</p>
+            
+            <div style="background: #f0fdf4; border: 2px solid #16a34a; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <h1 style="color: #16a34a; letter-spacing: 10px; margin: 0; font-size: 36px;">${otp}</h1>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">⏰ This OTP is valid for <strong>10 minutes</strong> only.</p>
+            <p style="color: #999; font-size: 13px;">If you didn't request this, please ignore this email.</p>
+          </div>
+          
+          <p style="color: #aaa; font-size: 12px; text-align: center; margin-top: 20px;">
+            DietDost - Apni Diet Ka Dost 🌿
+          </p>
+        </div>
+      `,
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+        }
+    );
+
+    return response.data;
 };
 
 module.exports = { generateOTP, sendOTPEmail };
