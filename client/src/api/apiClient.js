@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Base URL configuration
-// Dev: http://localhost:5000/api
+// Dev: https://dietdost.onrender.com/api
 // Prod: https://your-backend-api.com/api
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://dietdost.onrender.com/api';
 
 const apiClient = axios.create({
     baseURL: BASE_URL,
