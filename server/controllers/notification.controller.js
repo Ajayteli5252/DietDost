@@ -118,21 +118,21 @@ const sendTestNotification = async (req, res) => {
 // ================== CRON JOB - Send Daily Notifications ==================
 const sendDailyNotifications = async () => {
     try {
-        // Get current IST time in HH:mm format
+        // IST = UTC + 5 hours 30 minutes
+        // toLocaleTimeString is unreliable on some servers — manual offset is guaranteed
         const now = new Date();
-        const istTime = now.toLocaleTimeString('en-GB', { 
-            timeZone: 'Asia/Kolkata', 
-            hour12: false, 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        const istOffsetMs = (5 * 60 + 30) * 60 * 1000;
+        const istDate = new Date(now.getTime() + istOffsetMs);
+        const hours = String(istDate.getUTCHours()).padStart(2, '0');
+        const minutes = String(istDate.getUTCMinutes()).padStart(2, '0');
+        const istTime = `${hours}:${minutes}`;
 
-        console.log(`Running notifications cron for time: ${istTime}...`);
+        console.log(`[Cron] UTC Time: ${now.toISOString()} | IST Time: ${istTime}`);
 
-        // Get only users whose reminder_time matches the current IST time
+        // Get only users whose reminder_time matches current IST HH:mm
         const [users] = await db.query(
-            `SELECT u.id, u.name, u.email, 
-        ns.meal_reminder, ns.water_reminder, ns.streak_reminder
+            `SELECT u.id, u.name, u.email,
+        ns.meal_reminder, ns.water_reminder, ns.streak_reminder, ns.reminder_time
       FROM users u
       JOIN notification_settings ns ON u.id = ns.user_id
       WHERE u.is_verified = true
@@ -141,29 +141,38 @@ const sendDailyNotifications = async () => {
             [istTime]
         );
 
+        console.log(`[Cron] Found ${users.length} user(s) scheduled for ${istTime}`);
+
         if (users.length === 0) return;
 
         for (const user of users) {
             try {
+                console.log(`[Cron] Processing user: ${user.email}`);
+
                 // Check aaj meal log kiya ya nahi (IST Date)
-                const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                const todayIST = new Date(now.getTime() + istOffsetMs)
+                    .toISOString().slice(0, 10); // YYYY-MM-DD format
+
                 const [todayMeals] = await db.query(
                     'SELECT id FROM food_logs WHERE user_id = ? AND log_date = ? LIMIT 1',
-                    [user.id, today]
+                    [user.id, todayIST]
                 );
 
                 const loggedToday = todayMeals.length > 0;
+                console.log(`[Cron] User ${user.id} logged today: ${loggedToday}`);
 
                 // Meal reminder - agar aaj log nahi kiya
                 if (user.meal_reminder && !loggedToday) {
                     await sendMealReminder(user.email, user.name);
                     await createNotification(user.id, 'meal', '🍽️ Don\'t forget to log your meals today!');
+                    console.log(`[Cron] Meal reminder sent to ${user.email}`);
                 }
 
-                // Water reminder
+                // Water reminder - always send
                 if (user.water_reminder) {
                     await sendWaterReminder(user.email, user.name);
                     await createNotification(user.id, 'water', '💧 Stay hydrated! Have you had enough water today?');
+                    console.log(`[Cron] Water reminder sent to ${user.email}`);
                 }
 
                 // Streak reminder - agar streak hai aur aaj log nahi kiya
@@ -176,18 +185,19 @@ const sendDailyNotifications = async () => {
                     if (currentStreak > 0) {
                         await sendStreakReminder(user.email, user.name, currentStreak);
                         await createNotification(user.id, 'streak', `🔥 Don't break your ${currentStreak} day streak! Log a meal now.`);
+                        console.log(`[Cron] Streak reminder sent to ${user.email} (streak: ${currentStreak})`);
                     }
                 }
 
             } catch (userError) {
-                console.error(`Notification error for user ${user.id}:`, userError);
+                console.error(`[Cron] Error for user ${user.id}:`, userError.message);
             }
         }
 
-        console.log(`Daily notifications sent to ${users.length} users for time ${istTime}!`);
+        console.log(`[Cron] Done! Notifications sent for time slot ${istTime}.`);
 
     } catch (error) {
-        console.error('Cron job error:', error);
+        console.error('[Cron] Fatal error:', error.message);
     }
 };
 

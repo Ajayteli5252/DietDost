@@ -10,12 +10,18 @@ const sendBrevoEmail = async ({ to, subject, html }) => {
     const SENDER_EMAIL = process.env.SENDER_EMAIL || process.env.EMAIL_USER;
 
     if (!BREVO_API_KEY) {
-        console.error('BREVO_API_KEY is not defined!');
-        return;
+        console.error('[Email] BREVO_API_KEY is not defined! Cannot send email.');
+        return false;
+    }
+
+    if (!SENDER_EMAIL) {
+        console.error('[Email] SENDER_EMAIL is not defined! Cannot send email.');
+        return false;
     }
 
     try {
-        await axios.post(
+        console.log(`[Email] Sending to: ${to} | Subject: ${subject}`);
+        const response = await axios.post(
             BREVO_API_URL,
             {
                 sender: { name: 'DietDost', email: SENDER_EMAIL },
@@ -30,8 +36,11 @@ const sendBrevoEmail = async ({ to, subject, html }) => {
                 },
             }
         );
+        console.log(`[Email] Successfully sent to ${to} | Message ID: ${response.data?.messageId || 'N/A'}`);
+        return true;
     } catch (error) {
-        console.error('Error sending email via Brevo:', error.response?.data || error.message);
+        console.error(`[Email] Failed to send to ${to}:`, error.response?.data || error.message);
+        return false;
     }
 };
 

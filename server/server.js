@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const cron = require('node-cron');
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/api/meal', require('./routes/meal.routes'));
 app.use('/api/ai', require('./routes/ai.routes'));
 app.use('/api/streak', require('./routes/streak.routes'));
 app.use('/api/weight', require('./routes/weight.routes'));
+app.use('/api/notifications', require('./routes/notification.routes'));
 
 // Test route
 app.get('/', (req, res) => {
@@ -47,14 +49,9 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-//Notification routes
-const cron = require('node-cron');
-const { sendDailyNotifications } = require('./controllers/notification.controller');
-
-// Routes ke saath add karo
-app.use('/api/notifications', require('./routes/notification.routes'));
-
 // Cron job - Run every minute to check for scheduled notifications
+const { sendDailyNotifications } = require('./controllers/notification.controller');
 cron.schedule('* * * * *', () => {
     sendDailyNotifications();
 });
+console.log('[Cron] Notification scheduler started - checking every minute');
