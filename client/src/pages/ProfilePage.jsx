@@ -76,12 +76,13 @@ const ProfilePage = () => {
             setTestSuccess('');
             const res = await notificationApi.sendTest(type);
             if (res.success) {
-                setTestSuccess(`Test ${type} notification triggered successfully! Check your email and the notification bell 🔔`);
+                setTestSuccess(res.message || `Test ${type} notification triggered successfully! Check your email and the notification bell 🔔`);
                 setTimeout(() => setTestSuccess(''), 5000);
             }
         } catch (error) {
             console.error('Test notification error:', error);
-            alert('Failed to send test notification. Check console for details.');
+            const errMsg = error.response?.data?.message || 'Failed to send test notification. Check console for details.';
+            alert(errMsg);
         } finally {
             setTestLoading(false);
         }

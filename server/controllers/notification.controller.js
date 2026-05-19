@@ -88,11 +88,13 @@ const sendTestNotification = async (req, res) => {
 
         const { name, email } = user[0];
 
+        let emailSent = false;
+
         if (type === 'meal') {
-            await sendMealReminder(email, name);
+            emailSent = await sendMealReminder(email, name);
             await createNotification(userId, 'meal', '🍽️ Test Meal Reminder: Don\'t forget to log your meals today!');
         } else if (type === 'water') {
-            await sendWaterReminder(email, name);
+            emailSent = await sendWaterReminder(email, name);
             await createNotification(userId, 'water', '💧 Test Water Reminder: Stay hydrated! Have you had enough water today?');
         } else if (type === 'streak') {
             const [streak] = await db.query(
@@ -101,13 +103,20 @@ const sendTestNotification = async (req, res) => {
             );
             const currentStreak = streak[0]?.current_streak || 0;
             const displayStreak = currentStreak > 0 ? currentStreak : 3;
-            await sendStreakReminder(email, name, displayStreak);
+            emailSent = await sendStreakReminder(email, name, displayStreak);
             await createNotification(userId, 'streak', `🔥 Test Streak Reminder: Don't break your ${displayStreak} day streak! Log a meal now.`);
+        }
+
+        if (!emailSent) {
+            return res.status(400).json({
+                success: false,
+                message: `In-app notification created, but Email failed! Check if SENDER_EMAIL/BREVO_API_KEY are verified/correct in Render settings.`,
+            });
         }
 
         res.status(200).json({
             success: true,
-            message: `Test ${type} notification sent to ${email}!`,
+            message: `Test ${type} notification successfully sent to ${email} and website bell 🔔!`,
         });
 
     } catch (error) {

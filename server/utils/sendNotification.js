@@ -46,7 +46,7 @@ const sendBrevoEmail = async ({ to, subject, html }) => {
 
 // ================== MEAL REMINDER ==================
 const sendMealReminder = async (email, name) => {
-    await sendBrevoEmail({
+    return await sendBrevoEmail({
         to: email,
         subject: '🍽️ Time to log your meal! - DietDost',
         html: `
@@ -80,7 +80,7 @@ const sendMealReminder = async (email, name) => {
 
 // ================== WATER REMINDER ==================
 const sendWaterReminder = async (email, name) => {
-    await sendBrevoEmail({
+    return await sendBrevoEmail({
         to: email,
         subject: '💧 Have you had enough water today? - DietDost',
         html: `
@@ -110,7 +110,7 @@ const sendWaterReminder = async (email, name) => {
 
 // ================== STREAK REMINDER ==================
 const sendStreakReminder = async (email, name, currentStreak) => {
-    await sendBrevoEmail({
+    return await sendBrevoEmail({
         to: email,
         subject: `🔥 Don't break your ${currentStreak} day streak! - DietDost`,
         html: `
