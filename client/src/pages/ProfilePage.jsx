@@ -67,6 +67,26 @@ const ProfilePage = () => {
         }
     };
 
+    const [testLoading, setTestLoading] = useState(false);
+    const [testSuccess, setTestSuccess] = useState('');
+
+    const handleSendTest = async (type) => {
+        try {
+            setTestLoading(true);
+            setTestSuccess('');
+            const res = await notificationApi.sendTest(type);
+            if (res.success) {
+                setTestSuccess(`Test ${type} notification triggered successfully! Check your email and the notification bell 🔔`);
+                setTimeout(() => setTestSuccess(''), 5000);
+            }
+        } catch (error) {
+            console.error('Test notification error:', error);
+            alert('Failed to send test notification. Check console for details.');
+        } finally {
+            setTestLoading(false);
+        }
+    };
+
     const handleSignOut = () => {
         signOut();
         navigate('/');
@@ -260,6 +280,44 @@ const ProfilePage = () => {
                             {notifLoading && (
                                 <p className="text-xs text-gray-400 text-center mt-3">Saving...</p>
                             )}
+                        </div>
+
+                        {/* Test Notifications */}
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-4">
+                            <h3 className="font-bold text-gray-800 mb-2">🧪 Test Notifications</h3>
+                            <p className="text-xs text-gray-400 mb-4">
+                                Click below to instantly send a test notification to your email and notification bell.
+                            </p>
+
+                            {testSuccess && (
+                                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-4 text-xs font-medium leading-relaxed">
+                                    {testSuccess}
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-3 gap-2">
+                                <button
+                                    onClick={() => handleSendTest('meal')}
+                                    disabled={testLoading}
+                                    className="bg-green-50 hover:bg-green-100 text-green-700 py-2.5 px-2 rounded-xl text-xs font-semibold border border-green-100 transition-all disabled:opacity-50"
+                                >
+                                    🍽️ Meal Test
+                                </button>
+                                <button
+                                    onClick={() => handleSendTest('water')}
+                                    disabled={testLoading}
+                                    className="bg-blue-50 hover:bg-blue-100 text-blue-700 py-2.5 px-2 rounded-xl text-xs font-semibold border border-blue-100 transition-all disabled:opacity-50"
+                                >
+                                    💧 Water Test
+                                </button>
+                                <button
+                                    onClick={() => handleSendTest('streak')}
+                                    disabled={testLoading}
+                                    className="bg-orange-50 hover:bg-orange-100 text-orange-700 py-2.5 px-2 rounded-xl text-xs font-semibold border border-orange-100 transition-all disabled:opacity-50"
+                                >
+                                    🔥 Streak Test
+                                </button>
+                            </div>
                         </div>
 
                         {/* Sign Out */}

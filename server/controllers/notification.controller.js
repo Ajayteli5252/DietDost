@@ -90,15 +90,19 @@ const sendTestNotification = async (req, res) => {
 
         if (type === 'meal') {
             await sendMealReminder(email, name);
+            await createNotification(userId, 'meal', '🍽️ Test Meal Reminder: Don\'t forget to log your meals today!');
         } else if (type === 'water') {
             await sendWaterReminder(email, name);
+            await createNotification(userId, 'water', '💧 Test Water Reminder: Stay hydrated! Have you had enough water today?');
         } else if (type === 'streak') {
             const [streak] = await db.query(
                 'SELECT current_streak FROM streaks WHERE user_id = ?',
                 [userId]
             );
             const currentStreak = streak[0]?.current_streak || 0;
-            await sendStreakReminder(email, name, currentStreak);
+            const displayStreak = currentStreak > 0 ? currentStreak : 3;
+            await sendStreakReminder(email, name, displayStreak);
+            await createNotification(userId, 'streak', `🔥 Test Streak Reminder: Don't break your ${displayStreak} day streak! Log a meal now.`);
         }
 
         res.status(200).json({
