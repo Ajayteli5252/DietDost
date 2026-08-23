@@ -260,7 +260,7 @@ const getWeeklySummary = async (req, res) => {
         SUM(carbs) as total_carbs,
         SUM(fat) as total_fat
       FROM food_logs 
-      WHERE user_id = ? AND log_date >= DATE_SUB(DATE(CONVERT_TZ(NOW(), '+00:00', '+05:30')), INTERVAL 7 DAY)
+      WHERE user_id = ? AND log_date >= ((NOW() AT TIME ZONE 'Asia/Kolkata')::date - INTERVAL '7 day')
       GROUP BY log_date
       ORDER BY log_date ASC`,
             [userId]

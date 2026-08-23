@@ -170,7 +170,7 @@ const checkDeficiency = async (req, res) => {
                 AVG(carbs) as avg_carbs,
                 AVG(fat) as avg_fat
             FROM food_logs
-            WHERE user_id = ? AND log_date >= DATE_SUB(?, INTERVAL 7 DAY)`,
+            WHERE user_id = ? AND log_date >= (?::date - INTERVAL '7 day')`,
             [userId, todayIST]
         );
 

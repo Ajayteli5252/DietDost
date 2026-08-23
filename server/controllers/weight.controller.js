@@ -61,7 +61,7 @@ const getWeeklyWeight = async (req, res) => {
         const [weights] = await db.query(
             `SELECT weight, log_date, note
       FROM weight_logs
-      WHERE user_id = ? AND log_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+      WHERE user_id = ? AND log_date >= (CURRENT_DATE - INTERVAL '7 day')
       ORDER BY log_date ASC`,
             [userId]
         );
