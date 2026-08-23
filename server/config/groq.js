@@ -3,8 +3,11 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+const getModel = () => (process.env.GROQ_MODEL || '').trim() || 'groq/compound-mini';
+const getVisionModel = () => (process.env.GROQ_VISION_MODEL || '').trim() || 'groq/compound-mini';
+
 const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey: (process.env.GROQ_API_KEY || '').trim(),
 });
 
 const detectLanguage = (text) => {
@@ -71,7 +74,7 @@ const askAI = async (prompt, userLanguage = null, chatHistory = []) => {
             ...historyMessages,
             { role: 'user', content: prompt },
         ],
-        model: process.env.GROQ_MODEL || 'groq/compound-mini',
+        model: getModel(),
         temperature: 0.7,
         max_tokens: 400,
     });
@@ -85,7 +88,7 @@ const askAI = async (prompt, userLanguage = null, chatHistory = []) => {
 // Vision model for image analysis
 const askAIWithImage = async (prompt, imageBase64, mimeType, userLanguage = 'english', chatHistory = []) => {
     const language = userLanguage;
-    const visionModel = process.env.GROQ_VISION_MODEL || 'llama-3.2-11b-vision-preview';
+    const visionModel = getVisionModel();
 
     const historyMessages = chatHistory.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
@@ -135,7 +138,7 @@ const askAIJSON = async (prompt, model = null) => {
                 },
                 { role: 'user', content: prompt },
             ],
-            model: model || process.env.GROQ_MODEL || 'groq/compound-mini',
+            model: (model || '').trim() || getModel(),
             temperature: 0.1,
             max_tokens: 500,
             response_format: { type: "json_object" }
