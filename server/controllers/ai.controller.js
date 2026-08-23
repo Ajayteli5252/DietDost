@@ -303,26 +303,52 @@ Reply ONLY in this JSON format, nothing else:
   "total_protein": number
 }`;
 
-        const aiResponse = await askAI(prompt);
-
         let mealPlan;
         try {
+            const aiResponse = await askAIJSON(prompt);
             const cleanResponse = aiResponse.response
                 .replace(/```json/g, '')
                 .replace(/```/g, '')
                 .trim();
             mealPlan = JSON.parse(cleanResponse);
-        } catch (e) {
-            return res.status(500).json({
-                success: false,
-                message: 'Could not generate meal plan, try again!',
-            });
+        } catch (aiErr) {
+            console.error('MealPlan AI failed, using calculated fallback:', aiErr.message);
+            const cal = userProfile?.daily_calorie_target || 2000;
+            const prot = userProfile?.protein_target || 80;
+            mealPlan = {
+                breakfast: {
+                    meal: "Oatmeal with milk, chia seeds, sliced banana & almonds",
+                    calories: Math.round(cal * 0.25),
+                    protein: Math.round(prot * 0.25),
+                    tip: "Add a pinch of cinnamon for natural sweetness and metabolism boost."
+                },
+                lunch: {
+                    meal: "2 Whole Wheat Rotis, 1 cup Dal Tadka, Paneer/Chicken Sabzi & Green Salad",
+                    calories: Math.round(cal * 0.35),
+                    protein: Math.round(prot * 0.35),
+                    tip: "Use minimal oil and keep the dal thick for higher protein density."
+                },
+                snacks: {
+                    meal: "1 cup Boiled Chana Chaat or Sprout Salad with Lemon",
+                    calories: Math.round(cal * 0.15),
+                    protein: Math.round(prot * 0.15),
+                    tip: "Lemon juice boosts vitamin C and iron absorption from legumes."
+                },
+                dinner: {
+                    meal: "1 cup Brown/White Rice or Quinoa, Soya Chunks/Fish Curry & Sautéed Greens",
+                    calories: Math.round(cal * 0.25),
+                    protein: Math.round(prot * 0.25),
+                    tip: "Keep dinner light and finish at least 2 hours before bedtime."
+                },
+                total_calories: cal,
+                total_protein: prot
+            };
         }
 
         res.status(200).json({
             success: true,
             meal_plan: mealPlan,
-            calorie_target: userProfile?.daily_calorie_target,
+            calorie_target: userProfile?.daily_calorie_target || 2000,
         });
 
     } catch (error) {
