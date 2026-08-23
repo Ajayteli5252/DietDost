@@ -71,7 +71,7 @@ const askAI = async (prompt, userLanguage = null, chatHistory = []) => {
             ...historyMessages,
             { role: 'user', content: prompt },
         ],
-        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+        model: process.env.GROQ_MODEL || 'groq/compound-mini',
         temperature: 0.7,
         max_tokens: 400,
     });
@@ -135,7 +135,7 @@ const askAIJSON = async (prompt, model = null) => {
                 },
                 { role: 'user', content: prompt },
             ],
-            model: model || process.env.GROQ_MODEL || 'llama3-8b-8192',
+            model: model || process.env.GROQ_MODEL || 'groq/compound-mini',
             temperature: 0.1,
             max_tokens: 500,
             response_format: { type: "json_object" }
