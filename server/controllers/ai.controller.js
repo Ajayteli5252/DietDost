@@ -161,7 +161,7 @@ const checkDeficiency = async (req, res) => {
         const istDate = new Date(now.getTime() + istOffset);
         const todayIST = istDate.toISOString().split('T')[0];
 
-        // IST mein last 7 days ka data
+        // Fetch last 7 days of data in IST
         const [weeklyData] = await db.query(
             `SELECT 
                 COUNT(DISTINCT log_date) as days_tracked,
@@ -222,8 +222,8 @@ const checkDeficiency = async (req, res) => {
             aiResponse = await askAIJSON(prompt);
         } catch (aiErr) {
             console.error('AI Deficiency Check failed, using fallback mock logic:', aiErr.message);
-            // AI fail ho gaya, par hum user ko empty nahi dikhayenge
-            // Agar logs hain to moderate deficiency dikhao, warna low
+            // If AI fails, provide fallback so user doesn't see empty response
+            // If logs exist, indicate moderate deficiency, otherwise low
             const hasGaps = (weekData?.avg_protein < userProfile?.protein_target * 0.8) || (weekData?.avg_calories < userProfile?.daily_calorie_target * 0.8);
             
             aiResponse = {
@@ -266,7 +266,7 @@ const getMealPlanSuggestion = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // User profile lo
+        // Fetch user profile
         const [profile] = await db.query(
             `SELECT u.name, u.age, u.gender, u.state, p.goal, p.diet_type,
         p.workout_type, p.daily_calorie_target, p.protein_target,

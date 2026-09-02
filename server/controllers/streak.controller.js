@@ -6,13 +6,13 @@ const getStreak = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Streak record lo
+        // Fetch streak record
         let [streak] = await db.query(
             'SELECT * FROM streaks WHERE user_id = ?',
             [userId]
         );
 
-        // Pehli baar hai to create karo
+        // Create record if it is the first time
         if (streak.length === 0) {
             await db.query(
                 'INSERT INTO streaks (user_id, current_streak, longest_streak) VALUES (?, 0, 0)',
@@ -31,14 +31,14 @@ const getStreak = async (req, res) => {
 
         const streakData = streak[0];
 
-        // Aaj log kiya ya nahi check karo
+        // Check whether logged today
         const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
         const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
         const lastLogDate = streakData.last_log_date
             ? new Date(streakData.last_log_date).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
             : null;
 
-        // Agar last log 2 din se pehle hai to streak reset
+        // If last log is older than yesterday, reset streak
         if (lastLogDate && lastLogDate < yesterday) {
             await db.query(
                 'UPDATE streaks SET current_streak = 0 WHERE user_id = ?',
@@ -62,7 +62,7 @@ const getStreak = async (req, res) => {
         console.error('GetStreak error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -74,26 +74,26 @@ const updateStreak = async (req, res) => {
         const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
         const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
-        // Streak record lo
+        // Fetch streak record
         let [streak] = await db.query(
             'SELECT * FROM streaks WHERE user_id = ?',
             [userId]
         );
 
-        // Pehli baar hai to create karo
+        // Create record if it is the first time
         if (streak.length === 0) {
             await db.query(
                 'INSERT INTO streaks (user_id, current_streak, longest_streak, last_log_date) VALUES (?, 1, 1, ?)',
                 [userId, today]
             );
-            await createNotification(userId, 'streak', '🌱 Streak shuru ho gayi! Kal bhi log karna!');
+            await createNotification(userId, 'streak', '🌱 Your streak has started! Remember to log tomorrow as well!');
             return res.status(200).json({
                 success: true,
                 data: {
                     current_streak: 1,
                     longest_streak: 1,
                     badge: getBadge(1),
-                    message: '🔥 Streak shuru ho gayi!',
+                    message: '🔥 Streak started!',
                 },
             });
         }
@@ -103,7 +103,7 @@ const updateStreak = async (req, res) => {
             ? new Date(streakData.last_log_date).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
             : null;
 
-        // Aaj already log kiya hai
+        // Already logged today
         if (lastLogDate === today) {
             return res.status(200).json({
                 success: true,
@@ -111,7 +111,7 @@ const updateStreak = async (req, res) => {
                     current_streak: streakData.current_streak,
                     longest_streak: streakData.longest_streak,
                     badge: getBadge(streakData.current_streak),
-                    message: 'Aaj already log kiya hai!',
+                    message: 'Already logged today!',
                 },
             });
         }
@@ -119,11 +119,11 @@ const updateStreak = async (req, res) => {
         let newStreak;
         let oldBadge = getBadge(streakData.current_streak);
 
-        // Kal log kiya tha - streak continue
+        // Logged yesterday - continue streak
         if (lastLogDate === yesterday) {
             newStreak = streakData.current_streak + 1;
         } else {
-            // Miss ho gaya - reset
+            // Missed a day - reset streak
             newStreak = 1;
         }
 
@@ -142,7 +142,7 @@ const updateStreak = async (req, res) => {
 
         // Trigger Notifications
         if (newStreak === 1 && streakData.current_streak > 0) {
-            await createNotification(userId, 'streak', '😴 Streak reset ho gayi, par koi baat nahi! Nayi shuruat karo! 🌱');
+            await createNotification(userId, 'streak', '😴 Streak reset, but no worries! Make a fresh start! 🌱');
         } else if (newStreak > 1) {
             await createNotification(userId, 'streak', `🔥 Streak updated: ${newStreak} days! Keep it up!`);
         }
@@ -166,7 +166,7 @@ const updateStreak = async (req, res) => {
         console.error('UpdateStreak error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -181,17 +181,17 @@ const getBadge = (streak) => {
     if (streak >= 7) return { icon: '🥉', name: 'Bronze', color: 'text-orange-400' };
     if (streak >= 3) return { icon: '🔥', name: 'On Fire', color: 'text-orange-500' };
     if (streak >= 1) return { icon: '⭐', name: 'Beginner', color: 'text-green-500' };
-    return { icon: '😴', name: 'Start Karo', color: 'text-gray-400' };
+    return { icon: '😴', name: 'Get Started', color: 'text-gray-400' };
 };
 
 const getStreakMessage = (streak) => {
-    if (streak === 1) return '🌱 Shuru ho gaya! Kal bhi aana!';
-    if (streak === 3) return '🔥 3 din! Accha chal raha hai!';
-    if (streak === 7) return '🎉 1 hafta! Bronze badge mila!';
-    if (streak === 14) return '💪 2 hafte! Silver badge mila!';
-    if (streak === 30) return '🏆 1 mahina! Gold badge mila!';
-    if (streak === 90) return '👑 3 mahine! Champion ban gaye!';
-    return `🔥 ${streak} din ka streak! Keep going!`;
+    if (streak === 1) return '🌱 Off to a great start! Log again tomorrow!';
+    if (streak === 3) return '🔥 3-day streak! Keep the momentum going!';
+    if (streak === 7) return '🎉 1 week milestone! You earned the Bronze badge!';
+    if (streak === 14) return '💪 2 weeks strong! You earned the Silver badge!';
+    if (streak === 30) return '🏆 1 month champion! You earned the Gold badge!';
+    if (streak === 90) return '👑 3 months dedicated! You are now a Champion!';
+    return `🔥 ${streak}-day streak! Keep going!`;
 };
 
 module.exports = { getStreak, updateStreak };

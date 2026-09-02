@@ -1,7 +1,7 @@
 const db = require('../config/db');
 const { askAI } = require('../config/groq');
 
-// Helper: IST mein aaj ki date lo (UTC+5:30)
+// Helper: Get today's date in IST (UTC+5:30)
 const getISTDate = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
 // ================== ADD MEAL ==================
@@ -13,11 +13,11 @@ const addMeal = async (req, res) => {
         if (!meal_type || !food_description) {
             return res.status(400).json({
                 success: false,
-                message: 'Meal type aur food description dono chahiye!',
+                message: 'Meal type and food description are both required!',
             });
         }
 
-        // User profile lo calories target ke liye
+        // Fetch user profile for calorie targets
         const [profile] = await db.query(
             'SELECT diet_type, goal FROM user_profiles WHERE user_id = ?',
             [userId]
@@ -26,7 +26,7 @@ const addMeal = async (req, res) => {
         const dietType = profile[0]?.diet_type || 'vegetarian';
         const goal = profile[0]?.goal || 'general_health';
 
-        // AI se calories calculate karwao
+        // Calculate calories via AI
         const prompt = `
       User ate: "${food_description}"
       Diet type: ${dietType}
@@ -46,7 +46,7 @@ const addMeal = async (req, res) => {
 
         const aiResponse = await askAI(prompt);
 
-        // JSON parse karo
+        // Parse JSON response
         let nutritionData;
         try {
             const cleanResponse = aiResponse.response
@@ -60,11 +60,11 @@ const addMeal = async (req, res) => {
                 protein: 0,
                 carbs: 0,
                 fat: 0,
-                message: 'Nutrition calculate nahi ho saka!',
+                message: 'Unable to calculate nutrition!',
             };
         }
 
-        // Database me save karo
+        // Save into database
         const date = log_date || getISTDate();
 
         await db.query(
@@ -77,7 +77,7 @@ const addMeal = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Meal log ho gaya!',
+            message: 'Meal logged successfully!',
             data: nutritionData,
         });
 
@@ -85,7 +85,7 @@ const addMeal = async (req, res) => {
         console.error('AddMeal error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -101,7 +101,7 @@ const getTodayMeals = async (req, res) => {
             [userId, today]
         );
 
-        // Total calculate karo
+        // Calculate totals
         const totals = meals.reduce(
             (acc, meal) => {
                 acc.calories += meal.calories || 0;
@@ -113,7 +113,7 @@ const getTodayMeals = async (req, res) => {
             { calories: 0, protein: 0, carbs: 0, fat: 0 }
         );
 
-        // User ka target lo
+        // Fetch user targets
         const [profile] = await db.query(
             'SELECT daily_calorie_target, protein_target, carbs_target, fat_target FROM user_profiles WHERE user_id = ?',
             [userId]
@@ -135,7 +135,7 @@ const getTodayMeals = async (req, res) => {
         console.error('GetTodayMeals error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -177,7 +177,7 @@ const getMealsByDate = async (req, res) => {
         console.error('GetMealsByDate error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -195,14 +195,14 @@ const deleteMeal = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Meal delete ho gaya!',
+            message: 'Meal deleted successfully!',
         });
 
     } catch (error) {
         console.error('DeleteMeal error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -214,7 +214,7 @@ const addWater = async (req, res) => {
         const { glasses } = req.body;
         const today = getISTDate();
 
-        // Already log hai aaj ka?
+        // Check if logged for today
         const [existing] = await db.query(
             'SELECT id FROM water_logs WHERE user_id = ? AND log_date = ?',
             [userId, today]
@@ -234,7 +234,7 @@ const addWater = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Water log ho gaya!',
+            message: 'Water logged successfully!',
             glasses: glasses,
         });
 
@@ -242,7 +242,7 @@ const addWater = async (req, res) => {
         console.error('AddWater error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -275,7 +275,7 @@ const getWeeklySummary = async (req, res) => {
         console.error('GetWeeklySummary error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };

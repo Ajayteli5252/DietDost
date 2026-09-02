@@ -162,7 +162,7 @@ const sendDailyNotifications = async () => {
             try {
                 console.log(`[Cron] Processing user: ${user.email}`);
 
-                // Check aaj meal log kiya ya nahi (IST Date)
+                // Check if meal logged today (IST Date)
                 const todayIST = new Date(now.getTime() + istOffsetMs)
                     .toISOString().slice(0, 10); // YYYY-MM-DD format
 
@@ -174,7 +174,7 @@ const sendDailyNotifications = async () => {
                 const loggedToday = todayMeals.length > 0;
                 console.log(`[Cron] User ${user.id} logged today: ${loggedToday}`);
 
-                // Meal reminder - agar aaj log nahi kiya
+                // Meal reminder - if not logged today
                 if (user.meal_reminder && !loggedToday) {
                     await sendMealReminder(user.email, user.name);
                     await createNotification(user.id, 'meal', '🍽️ Don\'t forget to log your meals today!');
@@ -188,7 +188,7 @@ const sendDailyNotifications = async () => {
                     console.log(`[Cron] Water reminder sent to ${user.email}`);
                 }
 
-                // Streak reminder - agar streak hai aur aaj log nahi kiya
+                // Streak reminder - if streak exists and not logged today
                 if (user.streak_reminder && !loggedToday) {
                     const [streak] = await db.query(
                         'SELECT current_streak FROM streaks WHERE user_id = ?',

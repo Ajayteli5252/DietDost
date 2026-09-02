@@ -10,11 +10,12 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: function (origin, callback) {
-        callback(null, true);
-    },
-    credentials: true
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With']
 }));
+app.options('*', cors());
 app.use(express.json());
 
 // Global request logger

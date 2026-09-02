@@ -18,11 +18,11 @@ const saveOnboarding = async (req, res) => {
         if (!height || !weight || !goal || !activity_level || !diet_type || !workout_type) {
             return res.status(400).json({
                 success: false,
-                message: 'Sab fields bharo!',
+                message: 'Please fill in all fields!',
             });
         }
 
-        // User ki info lo age aur gender ke liye
+        // Fetch user info for age and gender
         const [user] = await db.query(
             'SELECT age, gender FROM users WHERE id = ?',
             [userId]
@@ -31,19 +31,19 @@ const saveOnboarding = async (req, res) => {
         if (user.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'User nahi mila!',
+                message: 'User not found!',
             });
         }
 
         const { age, gender } = user[0];
 
-        // BMR calculate karo
+        // Calculate BMR
         const bmr = calculateBMR(weight, height, age, gender);
 
         // Daily calorie target
         const dailyCalorieTarget = calculateCalorieTarget(bmr, activity_level, goal);
 
-        // Macros calculate karo
+        // Calculate macros
         const { protein, carbs, fat } = calculateMacros(dailyCalorieTarget, goal, diet_type);
 
         // Profile already exists?
@@ -53,7 +53,7 @@ const saveOnboarding = async (req, res) => {
         );
 
         if (existingProfile.length > 0) {
-            // Update karo
+            // Update existing profile
             await db.query(
                 `UPDATE user_profiles SET 
           height = ?, weight = ?, goal = ?, activity_level = ?,
@@ -65,7 +65,7 @@ const saveOnboarding = async (req, res) => {
                     dailyCalorieTarget, protein, carbs, fat, userId]
             );
         } else {
-            // Naya profile banao
+            // Create new profile
             await db.query(
                 `INSERT INTO user_profiles 
           (user_id, height, weight, goal, activity_level, diet_type, workout_type,
@@ -76,7 +76,7 @@ const saveOnboarding = async (req, res) => {
             );
         }
 
-        // Onboarding complete mark karo
+        // Mark onboarding as complete
         await db.query(
             'UPDATE users SET onboarding_complete = true WHERE id = ?',
             [userId]
@@ -84,7 +84,7 @@ const saveOnboarding = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Profile save ho gaya!',
+            message: 'Profile saved successfully!',
             data: {
                 daily_calorie_target: dailyCalorieTarget,
                 protein_target: protein,
@@ -97,7 +97,7 @@ const saveOnboarding = async (req, res) => {
         console.error('Onboarding error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi, dobara try karo!',
+            message: 'Something went wrong, please try again!',
         });
     }
 };
@@ -121,7 +121,7 @@ const getProfile = async (req, res) => {
         if (profile.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Profile nahi mila!',
+                message: 'Profile not found!',
             });
         }
 
@@ -134,7 +134,7 @@ const getProfile = async (req, res) => {
         console.error('GetProfile error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
@@ -152,7 +152,7 @@ const updateProfile = async (req, res) => {
             workout_type,
         } = req.body;
 
-        // User ki info lo
+        // Fetch user info
         const [user] = await db.query(
             'SELECT age, gender FROM users WHERE id = ?',
             [userId]
@@ -160,7 +160,7 @@ const updateProfile = async (req, res) => {
 
         const { age, gender } = user[0];
 
-        // Recalculate karo
+        // Recalculate targets
         const bmr = calculateBMR(weight, height, age, gender);
         const dailyCalorieTarget = calculateCalorieTarget(bmr, activity_level, goal);
         const { protein, carbs, fat } = calculateMacros(dailyCalorieTarget, goal, diet_type);
@@ -178,7 +178,7 @@ const updateProfile = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Profile update ho gaya!',
+            message: 'Profile updated successfully!',
             data: {
                 daily_calorie_target: dailyCalorieTarget,
                 protein_target: protein,
@@ -191,7 +191,7 @@ const updateProfile = async (req, res) => {
         console.error('UpdateProfile error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };

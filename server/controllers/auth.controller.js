@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// JWT token banao
+// Generate JWT token
 const generateToken = (userId, email) => {
     return jwt.sign(
         { id: userId, email: email },
@@ -25,7 +25,7 @@ const signUp = async (req, res) => {
         if (!name || !email || !password || !age || !gender || !state) {
             return res.status(400).json({
                 success: false,
-                message: 'Sab fields bharo!',
+                message: 'Please fill in all fields!',
             });
         }
 
@@ -36,16 +36,16 @@ const signUp = async (req, res) => {
         );
 
         if (existingUser.length > 0) {
-            // Agar user verified hai toh block karo
+            // If user is verified, prevent re-registration
             if (existingUser[0].is_verified) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Ye email already registered hai!',
+                    message: 'This email is already registered!',
                 });
             }
         }
 
-        // Password hash karo
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
 
         let userId;
@@ -65,20 +65,20 @@ const signUp = async (req, res) => {
             userId = result.insertId;
         }
 
-        // OTP generate karo
+        // Generate OTP
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-        // Purana OTP delete karo
+        // Delete old OTP
         await db.query('DELETE FROM otp_verification WHERE email = ?', [email]);
 
-        // Naya OTP save karo
+        // Save new OTP
         await db.query(
             'INSERT INTO otp_verification (email, otp, expires_at) VALUES (?, ?, ?)',
             [email, otp, expiresAt]
         );
 
-        // OTP email bhejo
+        // Send OTP via email
         try {
             await sendOTPEmail(email, otp);
         } catch (emailError) {
@@ -89,7 +89,7 @@ const signUp = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'OTP bhej diya! Email check karo.',
+            message: 'OTP sent! Please check your email.',
             userId: userId,
         });
 
@@ -97,7 +97,7 @@ const signUp = async (req, res) => {
         console.error('CRITICAL SignUp error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi, dobara try karo!',
+            message: 'Something went wrong, please try again!',
             error: error.message // Temporarily show error message to user for debugging
         });
     }
@@ -111,11 +111,11 @@ const verifyOTP = async (req, res) => {
         if (!email || !otp) {
             return res.status(400).json({
                 success: false,
-                message: 'Email aur OTP dono chahiye!',
+                message: 'Email and OTP are both required!',
             });
         }
 
-        // OTP find karo
+        // Find OTP record
         const [otpRecord] = await db.query(
             'SELECT * FROM otp_verification WHERE email = ? ORDER BY created_at DESC LIMIT 1',
             [email]
@@ -124,31 +124,31 @@ const verifyOTP = async (req, res) => {
         if (otpRecord.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'OTP nahi mila, dobara signup karo!',
+                message: 'OTP not found, please sign up again!',
             });
         }
 
         const record = otpRecord[0];
 
-        // Attempts check karo
+        // Check attempts count
         if (record.attempts >= 3) {
             return res.status(400).json({
                 success: false,
-                message: '3 baar galat OTP dala, dobara signup karo!',
+                message: 'Too many incorrect OTP attempts. Please sign up again!',
             });
         }
 
-        // Expiry check karo
+        // Check expiration
         if (new Date() > new Date(record.expires_at)) {
             return res.status(400).json({
                 success: false,
-                message: 'OTP expire ho gaya, dobara bhejwa lo!',
+                message: 'OTP has expired, please request a new one!',
             });
         }
 
-        // OTP match karo
+        // Match OTP
         if (record.otp !== otp) {
-            // Attempts badhao
+            // Increment attempts
             await db.query(
                 'UPDATE otp_verification SET attempts = attempts + 1 WHERE id = ?',
                 [record.id]
@@ -156,31 +156,31 @@ const verifyOTP = async (req, res) => {
 
             return res.status(400).json({
                 success: false,
-                message: `Galat OTP! ${2 - record.attempts} attempts baaki hain.`,
+                message: `Invalid OTP! ${2 - record.attempts} attempt(s) remaining.`,
             });
         }
 
-        // OTP sahi hai - user verify karo
+        // OTP is valid - verify user
         await db.query(
             'UPDATE users SET is_verified = true WHERE email = ?',
             [email]
         );
 
-        // OTP delete karo
+        // Delete OTP
         await db.query('DELETE FROM otp_verification WHERE email = ?', [email]);
 
-        // User info lo
+        // Fetch user info
         const [user] = await db.query(
             'SELECT id, name, email, onboarding_complete FROM users WHERE email = ?',
             [email]
         );
 
-        // Token banao
+        // Generate token
         const token = generateToken(user[0].id, user[0].email);
 
         res.status(200).json({
             success: true,
-            message: 'Email verify ho gaya!',
+            message: 'Email verified successfully!',
             token: token,
             user: {
                 id: user[0].id,
@@ -194,7 +194,7 @@ const verifyOTP = async (req, res) => {
         console.error('VerifyOTP error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi, dobara try karo!',
+            message: 'Something went wrong, please try again!',
         });
     }
 };
@@ -204,7 +204,7 @@ const resendOTP = async (req, res) => {
     try {
         const { email } = req.body;
 
-        // User check karo
+        // Check user existence
         const [user] = await db.query(
             'SELECT id FROM users WHERE email = ?',
             [email]
@@ -213,36 +213,36 @@ const resendOTP = async (req, res) => {
         if (user.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Email registered nahi hai!',
+                message: 'Email is not registered!',
             });
         }
 
-        // Naya OTP banao
+        // Generate new OTP
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-        // Purana OTP delete karo
+        // Delete old OTP
         await db.query('DELETE FROM otp_verification WHERE email = ?', [email]);
 
-        // Naya OTP save karo
+        // Save new OTP
         await db.query(
             'INSERT INTO otp_verification (email, otp, expires_at) VALUES (?, ?, ?)',
             [email, otp, expiresAt]
         );
 
-        // Email bhejo
+        // Send email
         await sendOTPEmail(email, otp);
 
         res.status(200).json({
             success: true,
-            message: 'Naya OTP bhej diya!',
+            message: 'New OTP sent successfully!',
         });
 
     } catch (error) {
         console.error('ResendOTP error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi, dobara try karo!',
+            message: 'Something went wrong, please try again!',
         });
     }
 };
@@ -255,11 +255,11 @@ const signIn = async (req, res) => {
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Email aur password dono chahiye!',
+                message: 'Email and password are both required!',
             });
         }
 
-        // User find karo
+        // Find user record
         const [user] = await db.query(
             'SELECT * FROM users WHERE email = ?',
             [email]
@@ -268,29 +268,29 @@ const signIn = async (req, res) => {
         if (user.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Email registered nahi hai!',
+                message: 'Email is not registered!',
             });
         }
 
-        // Verified check karo
+        // Check verification status
         if (!user[0].is_verified) {
             return res.status(400).json({
                 success: false,
-                message: 'Pehle email verify karo!',
+                message: 'Please verify your email first!',
             });
         }
 
-        // Password check karo
+        // Verify password
         const isMatch = await bcrypt.compare(password, user[0].password);
 
         if (!isMatch) {
             return res.status(400).json({
                 success: false,
-                message: 'Galat password!',
+                message: 'Invalid password!',
             });
         }
 
-        // Token banao
+        // Generate token
         const token = generateToken(user[0].id, user[0].email);
 
         res.status(200).json({
@@ -309,7 +309,7 @@ const signIn = async (req, res) => {
         console.error('SignIn error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi, dobara try karo!',
+            message: 'Something went wrong, please try again!',
         });
     }
 };
@@ -325,7 +325,7 @@ const getMe = async (req, res) => {
         if (user.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'User nahi mila!',
+                message: 'User not found!',
             });
         }
 
@@ -338,7 +338,7 @@ const getMe = async (req, res) => {
         console.error('GetMe error:', error);
         res.status(500).json({
             success: false,
-            message: 'Kuch gadbad ho gayi!',
+            message: 'Something went wrong!',
         });
     }
 };
