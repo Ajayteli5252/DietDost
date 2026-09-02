@@ -16,6 +16,7 @@ const OnboardingPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
+        age: '',
         height: '',
         weight: '',
         goal: '',
@@ -31,6 +32,7 @@ const OnboardingPage = () => {
                 if (res.success && res.profile) {
                     const p = res.profile;
                     setFormData({
+                        age: p.age || '',
                         height: p.height || '',
                         weight: p.weight || '',
                         goal: p.goal || '',

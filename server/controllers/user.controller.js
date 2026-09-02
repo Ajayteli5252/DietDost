@@ -6,6 +6,7 @@ const saveOnboarding = async (req, res) => {
     try {
         const userId = req.user.id;
         const {
+            age: newAge,
             height,
             weight,
             goal,
@@ -35,7 +36,14 @@ const saveOnboarding = async (req, res) => {
             });
         }
 
-        const { age, gender } = user[0];
+        let age = user[0].age;
+        const gender = user[0].gender;
+
+        // If age is passed and valid, update user age
+        if (newAge && !isNaN(Number(newAge)) && Number(newAge) >= 10 && Number(newAge) <= 100) {
+            age = parseInt(newAge, 10);
+            await db.query('UPDATE users SET age = ? WHERE id = ?', [age, userId]);
+        }
 
         // Calculate BMR
         const bmr = calculateBMR(weight, height, age, gender);
@@ -86,6 +94,7 @@ const saveOnboarding = async (req, res) => {
             success: true,
             message: 'Profile saved successfully!',
             data: {
+                age: age,
                 daily_calorie_target: dailyCalorieTarget,
                 protein_target: protein,
                 carbs_target: carbs,
@@ -144,6 +153,7 @@ const updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
         const {
+            age: newAge,
             height,
             weight,
             goal,
@@ -158,7 +168,14 @@ const updateProfile = async (req, res) => {
             [userId]
         );
 
-        const { age, gender } = user[0];
+        let age = user[0]?.age;
+        const gender = user[0]?.gender;
+
+        // If age is provided, update it
+        if (newAge && !isNaN(Number(newAge)) && Number(newAge) >= 10 && Number(newAge) <= 100) {
+            age = parseInt(newAge, 10);
+            await db.query('UPDATE users SET age = ? WHERE id = ?', [age, userId]);
+        }
 
         // Recalculate targets
         const bmr = calculateBMR(weight, height, age, gender);
@@ -180,6 +197,7 @@ const updateProfile = async (req, res) => {
             success: true,
             message: 'Profile updated successfully!',
             data: {
+                age: age,
                 daily_calorie_target: dailyCalorieTarget,
                 protein_target: protein,
                 carbs_target: carbs,

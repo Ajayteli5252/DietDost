@@ -8,6 +8,10 @@ const Step1BasicInfo = ({ data, onUpdate, onNext }) => {
             setError('Please enter both height and weight!');
             return;
         }
+        if (data.age && (Number(data.age) < 10 || Number(data.age) > 100)) {
+            setError('Please enter a valid age (10-100 years)!');
+            return;
+        }
         if (data.height < 100 || data.height > 250) {
             setError('Please enter a valid height (100-250 cm)!');
             return;
@@ -26,7 +30,7 @@ const Step1BasicInfo = ({ data, onUpdate, onNext }) => {
                 <div className="text-5xl mb-3">📏</div>
                 <h2 className="text-2xl font-bold text-gray-800">Basic Info</h2>
                 <p className="text-gray-500 text-sm mt-1">
-                    Necessary to calculate your calorie target
+                    Necessary to calculate your metabolic rate & calorie target
                 </p>
             </div>
 
@@ -37,6 +41,27 @@ const Step1BasicInfo = ({ data, onUpdate, onNext }) => {
             )}
 
             <div className="space-y-6">
+                {/* Age */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Age (Years)
+                    </label>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            value={data.age || ''}
+                            onChange={(e) => onUpdate({ age: e.target.value })}
+                            placeholder="Example: 22"
+                            min="10"
+                            max="100"
+                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-green-500 transition-all"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                            yrs
+                        </span>
+                    </div>
+                </div>
+
                 {/* Height */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
