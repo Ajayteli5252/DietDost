@@ -3,15 +3,15 @@ const errorHandler = (err, req, res, next) => {
 
     // Default error
     let statusCode = err.statusCode || 500;
-    let message = err.message || 'Kuch gadbad ho gayi!';
+    let message = err.message || 'Something went wrong!';
 
-    // MySQL errors
-    if (err.code === 'ER_DUP_ENTRY') {
+    // Database / SQL errors
+    if (err.code === 'ER_DUP_ENTRY' || err.code === '23505') {
         statusCode = 400;
-        message = 'Ye email already registered hai!';
+        message = 'This email is already registered!';
     }
 
-    if (err.code === 'ER_NO_REFERENCED_ROW_2') {
+    if (err.code === 'ER_NO_REFERENCED_ROW_2' || err.code === '23503') {
         statusCode = 400;
         message = 'Invalid reference!';
     }
@@ -24,7 +24,7 @@ const errorHandler = (err, req, res, next) => {
 
     if (err.name === 'TokenExpiredError') {
         statusCode = 401;
-        message = 'Session expire ho gaya, dobara login karo!';
+        message = 'Session has expired, please login again!';
     }
 
     // Validation errors
@@ -36,7 +36,7 @@ const errorHandler = (err, req, res, next) => {
     res.status(statusCode).json({
         success: false,
         message: message,
-        // Development me stack trace dikhao
+        // Include stack trace in development mode
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
 };

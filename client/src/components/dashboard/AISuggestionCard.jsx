@@ -49,7 +49,7 @@ const ShimmerLoader = () => (
     </div>
 );
 
-const AISuggestionCard = ({ suggestion, loading }) => {
+const AISuggestionCard = ({ suggestion, loading, onRefresh, refreshing }) => {
     if (loading) {
         return (
             <div className="bg-white rounded-2xl p-6 shadow-sm border-l-4 border-green-500 border border-gray-100">
@@ -76,11 +76,35 @@ const AISuggestionCard = ({ suggestion, loading }) => {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-3">
-                        <h3 className="font-bold text-gray-800">AI Suggestion of the Day</h3>
-                        <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold">
-                            Personalized
-                        </span>
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-gray-800">AI Suggestion of the Day</h3>
+                            <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold">
+                                Personalized
+                            </span>
+                        </div>
+                        {onRefresh && (
+                            <button
+                                onClick={onRefresh}
+                                disabled={refreshing}
+                                title="Regenerate English suggestion"
+                                className="text-gray-400 hover:text-green-600 p-1.5 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50"
+                            >
+                                <svg
+                                    className={`w-4 h-4 ${refreshing ? 'animate-spin text-green-600' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                    />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                     {renderSuggestion(suggestion)}
                 </div>

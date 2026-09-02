@@ -5,29 +5,29 @@ dotenv.config();
 
 const verifyToken = (req, res, next) => {
     try {
-        // Header se token lo
+        // Extract token from header
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-        // Token nahi hai
+        // Check if token exists
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: 'Access denied. Token nahi mila!',
+                message: 'Access denied. No token provided!',
             });
         }
 
-        // Token verify karo
+        // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
 
     } catch (error) {
-        // Token expire ya invalid
+        // Token expired or invalid
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({
                 success: false,
-                message: 'Session expire ho gaya, dobara login karo!',
+                message: 'Session has expired, please login again!',
             });
         }
 

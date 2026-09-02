@@ -76,19 +76,25 @@ const DashboardPage = () => {
     const { todayMeals, totals, targets, loading, deleteMeal } = useCalorie();
     const [suggestion, setSuggestion] = useState('');
     const [suggestionLoading, setSuggestionLoading] = useState(true);
+    const [refreshingSuggestion, setRefreshingSuggestion] = useState(false);
+
+    const fetchSuggestion = async (refresh = false) => {
+        if (refresh) setRefreshingSuggestion(true);
+        else setSuggestionLoading(true);
+
+        try {
+            const res = await aiApi.getDailySuggestion(refresh);
+            if (res.success) setSuggestion(res.suggestion);
+        } catch (error) {
+            console.error('Suggestion error:', error);
+        } finally {
+            setSuggestionLoading(false);
+            setRefreshingSuggestion(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchSuggestion = async () => {
-            try {
-                const res = await aiApi.getDailySuggestion();
-                if (res.success) setSuggestion(res.suggestion);
-            } catch (error) {
-                console.error('Suggestion error:', error);
-            } finally {
-                setSuggestionLoading(false);
-            }
-        };
-        fetchSuggestion();
+        fetchSuggestion(false);
     }, []);
 
     const getGreeting = () => {
@@ -142,6 +148,8 @@ const DashboardPage = () => {
                         <AISuggestionCard
                             suggestion={suggestion}
                             loading={suggestionLoading}
+                            onRefresh={() => fetchSuggestion(true)}
+                            refreshing={refreshingSuggestion}
                         />
                     </div>
 

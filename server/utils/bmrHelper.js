@@ -1,4 +1,4 @@
-// BMR Calculate karo (Mifflin-St Jeor Formula)
+// Calculate BMR (Mifflin-St Jeor Formula)
 const calculateBMR = (weight, height, age, gender) => {
     if (gender === 'male') {
         return 10 * weight + 6.25 * height - 5 * age + 5;
@@ -15,7 +15,7 @@ const activityMultiplier = {
     very_active: 1.725,
 };
 
-// Daily calorie target calculate karo
+// Calculate daily calorie target
 const calculateCalorieTarget = (bmr, activityLevel, goal) => {
     const tdee = bmr * activityMultiplier[activityLevel];
 
@@ -33,7 +33,7 @@ const calculateCalorieTarget = (bmr, activityLevel, goal) => {
     }
 };
 
-// Macros calculate karo
+// Calculate macronutrient distribution
 const calculateMacros = (calories, goal, dietType) => {
     let protein, carbs, fat;
 

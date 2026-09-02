@@ -3,8 +3,8 @@ import apiClient from './apiClient';
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/ai` : 'https://dietdost.onrender.com/api/ai';
 
 export const aiApi = {
-    getDailySuggestion: async () => {
-        const res = await apiClient.get('ai/suggestion');
+    getDailySuggestion: async (refresh = false) => {
+        const res = await apiClient.get(`ai/suggestion${refresh ? '?refresh=true' : ''}`);
         return res.data;
     },
 

@@ -3,12 +3,12 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// OTP generate karo
+// Generate 6-digit numeric OTP
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// OTP email bhejo via Brevo API (HTTPS - works on Render, sends to ANY email)
+// Send OTP email via Brevo API (HTTPS)
 const sendOTPEmail = async (email, otp) => {
     const BREVO_API_KEY = process.env.BREVO_API_KEY;
     const SENDER_EMAIL = process.env.SENDER_EMAIL || process.env.EMAIL_USER;

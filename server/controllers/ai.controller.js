@@ -16,8 +16,15 @@ const getDailySuggestion = async (req, res) => {
             [userId, today]
         );
 
-        if (existing.length > 0) {
-            return res.status(200).json({ success: true, suggestion: existing[0].suggestion });
+        const forceRefresh = req.query.refresh === 'true';
+
+        if (existing.length > 0 && !forceRefresh) {
+            // Check if existing cached suggestion is already in English
+            const detectedLang = detectLanguage(existing[0].suggestion);
+            if (detectedLang === 'english') {
+                return res.status(200).json({ success: true, suggestion: existing[0].suggestion });
+            }
+            // If it was cached in Hinglish or Hindi, proceed to re-generate in English and update the cache!
         }
 
         const [profile] = await db.query(
@@ -47,27 +54,34 @@ const getDailySuggestion = async (req, res) => {
       - Goal: ${userProfile?.goal}
       - Diet Type: ${userProfile?.diet_type}
       - Workout: ${userProfile?.workout_type}
-      - Daily Calorie Target: ${userProfile?.daily_calorie_target}
+      - Daily Calorie Target: ${userProfile?.daily_calorie_target} kcal
       - Protein Target: ${userProfile?.protein_target}g
 
       Today's Data:
-      - Total Calories: ${Math.round(todayData?.total_calories || 0)}
+      - Total Calories: ${Math.round(todayData?.total_calories || 0)} kcal
       - Total Protein: ${Math.round(todayData?.total_protein || 0)}g
       - Total Carbs: ${Math.round(todayData?.total_carbs || 0)}g
       - Total Fat: ${Math.round(todayData?.total_fat || 0)}g
 
       Give a short, helpful, personalized diet suggestion for this user today.
       Write 2-3 sentences max. Use **bold** only for key food names or numbers.
-      Suggest Indian foods where possible. Be positive and motivating.
-      IMPORTANT: Respond ONLY in English. Do NOT use Hindi or Hinglish.
+      Suggest healthy foods aligned with their goal and diet. Be positive and motivating.
+      CRITICAL: The response MUST be written 100% in English. Do NOT use any Hindi or Hinglish words (e.g. do not use words like "aaj", "tum", "karo", "mein", "ke liye", "chawal", "khaya").
     `;
 
-        const aiResponse = await askAI(prompt);
+        const aiResponse = await askAI(prompt, 'english');
 
-        await db.query(
-            'INSERT INTO ai_suggestions (user_id, suggestion, suggestion_date) VALUES (?, ?, ?)',
-            [userId, aiResponse.response, today]
-        );
+        if (existing.length > 0) {
+            await db.query(
+                'UPDATE ai_suggestions SET suggestion = ? WHERE id = ?',
+                [aiResponse.response, existing[0].id]
+            );
+        } else {
+            await db.query(
+                'INSERT INTO ai_suggestions (user_id, suggestion, suggestion_date) VALUES (?, ?, ?)',
+                [userId, aiResponse.response, today]
+            );
+        }
 
         res.status(200).json({ success: true, suggestion: aiResponse.response });
 
